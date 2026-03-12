@@ -1,0 +1,10 @@
+.navbar-brand img{
+    width: 60px;
+}
+.navbar{
+    background-color: rgb(255, 166, 0);
+}
+.user{
+    background-color: rgb(246, 239, 239);
+    border-radius: 50%;
+}
