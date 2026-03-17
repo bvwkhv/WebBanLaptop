@@ -42,5 +42,31 @@ footer div p{
     font-size: 20px;
 }
 h1{
-    font-size: 40px;
+    font-size: 35px;
 }
+
+/* Hình ảnh và mô tả */
+.product-main-content {
+    display: flex;       
+    align-items: flex-start;
+    gap: 30px;         
+    margin-top: 20px;
+}
+
+.image {
+    flex: 1;             
+    max-width: 40%;      
+}
+
+.description-side {
+    display: flex;
+    flex-direction: column; /* Ép các phần tử con xếp theo hàng dọc */
+    gap: 10px;              /* Khoảng cách giữa các mục cho đẹp */
+}
+
+.image img {
+    height: auto;
+    width: 100%;
+    display: block;
+}
+
