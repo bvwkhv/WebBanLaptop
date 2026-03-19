@@ -26,9 +26,7 @@
     <nav class="navbar navbar-expand-lg navbar-light border-bottom">
   <div class="container">
     <!-- navbar rand -->
-    <a class="navbar-brand" href="index.html">
-      <img src="./image/logolaptop.jpg" alt="logo">
-    </a>
+    <a class="navbar-brand home" href="index.php">Home</a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
@@ -83,11 +81,10 @@
         <h1 class="mt-5"><?= $products["product_name"]?></h1>
         <div class="product-main-content">
             <div class="image">
-                <img src="image/<?= $products["image_url"]?>" alt="" height="40%" width="50%">
+                <img src="image/<?= $products["image_url"]?>" alt="product Image">
             </div>
         <!-- Bộ xử lý -->
         <div class="description-side mt-5">
-        
         <details class="card mb-2">
             <summary class="card-header">Bộ xử lý</summary>
             <div class="card-body">
@@ -136,7 +133,8 @@
 
     <footer class="text-bg-dark py-5">
         <div>
-            <p>Dữ liệu sản phẩm được tổng hợp từ FPT-Shopp và FIT-TDC 2019</p>
+            <p>© 2026 - Đồ án Chuyên ngành Công nghệ thông tin</p>
+            <p>Dữ liệu sản phẩm được tổng hợp từ FPT-Shop và FIT-TDC 2019</p>
         </div>
         </footer>
 

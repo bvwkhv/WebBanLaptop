@@ -19,9 +19,7 @@
     <nav class="navbar navbar-expand-lg navbar-light border-bottom">
   <div class="container">
     <!-- navbar rand -->
-    <a class="navbar-brand" href="#">
-      <img src="./image/logolaptop.jpg" alt="logo">
-    </a>
+    <a class="navbar-brand home" href="index.php">Home</a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
@@ -94,9 +92,11 @@
                             <div class="card-body p-4">
                                 <div class="text-center">
                                     <!-- Product name-->
-                                    <h5 class="fw-bolder"><?= $r["product_name"]?></h5>
+                                    <h5 class="fw-bolder card-title"><?= $r["product_name"]?></h5>
                                     <!-- Product price-->
-                                    <?= $r["price"]?>
+                                    <span class="product-price">
+                                      <?= number_format($r["price"],0,',','.')?>đ
+                                    </span>
                                 </div>
                             </div>
                             <!-- Product actions-->
@@ -112,7 +112,8 @@
         <!-- Footer -->
         <footer class="text-bg-dark py-5">
           <div>
-            <p>Dữ liệu sản phẩm được tổng hợp từ FPT-Shopp và FIT-TDC 2019</p>
+            <p>© 2026 - Đồ án Chuyên ngành Công nghệ thông tin</p>
+            <p>Dữ liệu sản phẩm được tổng hợp từ FPT-Shop và FIT-TDC 2019</p>
           </div>
         </footer>
 

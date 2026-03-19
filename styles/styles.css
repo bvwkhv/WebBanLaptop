@@ -1,4 +1,6 @@
-
+body{
+    background-color: #fff4c5;
+}
 .navbar-brand img{
     width: 60px;
 }
@@ -44,29 +46,64 @@ footer div p{
 h1{
     font-size: 35px;
 }
+.card-title {
+    font-weight: normal !important; /* Bỏ in đậm */
+    font-size: 1.05rem;
+    color: #333;
+    line-height: 1.4;
+    margin-bottom: 15px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* Giới hạn 2 dòng cho đều khung */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.product-price {
+    font-weight: bold !important; /* In đậm */
+    font-size: 1.4rem; /* Làm to ra */
+    color: #FF8C00; /* Màu cam chủ đạo */
+    margin-bottom: 15px;
+    display: block;
+}
+.card{
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    border-radius: 10px;
+    border: none !important;
+    transition: all 0.3s ease-in-out;
+    background-color: #fff;
+    padding: 15px;
+}
+.card:hover{
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+    transform: translateY(-10px);
+}
 
 /* Hình ảnh và mô tả */
 .product-main-content {
-    display: flex;       
+    display: flex;
     align-items: flex-start;
-    gap: 30px;         
+    gap: 30px;
     margin-top: 20px;
+    width: 100%; /* Đảm bảo không vượt quá chiều ngang màn hình */
 }
 
 .image {
-    flex: 1;             
-    max-width: 40%;      
-}
-
-.description-side {
-    display: flex;
-    flex-direction: column; /* Ép các phần tử con xếp theo hàng dọc */
-    gap: 10px;              /* Khoảng cách giữa các mục cho đẹp */
+    flex: 0 0 40%; /* Cố định cột ảnh luôn chiếm đúng 40% diện tích */
+    max-width: 40%;
 }
 
 .image img {
-    height: auto;
     width: 100%;
+    height: auto;
     display: block;
 }
 
+.description-side {
+    flex: 1;      /* Cột chữ chiếm 60% diện tích còn lại */
+    min-width: 0; /* CỰC KỲ QUAN TRỌNG: Ngăn nội dung dài làm giãn flex item */
+}
+
+.card-body p {
+    word-wrap: break-word;     /* Tự động xuống dòng */
+    overflow-wrap: break-word; 
+    white-space: normal;       /* Ngăn chặn văn bản kéo dài trên một hàng */
+}
