@@ -107,3 +107,53 @@ h1{
     overflow-wrap: break-word; 
     white-space: normal;       /* Ngăn chặn văn bản kéo dài trên một hàng */
 }
+
+/* User */
+/* 2. Ép menu dạt sang bên TRÁI của icon */
+.custom-user-dropdown .dropdown-menu {
+    /* Ép sát mép TRÁI icon */
+    left: 0 !important; 
+    right: auto !important; 
+    
+    /* Vô hiệu hóa mọi dịch chuyển cũ */
+    transform: none !important;
+    
+    /* Vị trí từ trên xuống */
+    top: 100% !important;
+    margin-top: 10px !important;
+
+    /* Giữ nguyên giao diện của bạn */
+    border-radius: 10px;
+    border: none;
+    border-top: 4px solid #FF8C00;
+    min-width: 180px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    position: absolute !important;
+}
+
+/* 3. Hiệu ứng Hover hiện menu */
+.custom-user-dropdown:hover .dropdown-menu {
+    display: block !important;
+}
+
+/* 4. Cây cầu vô hình để không bị mất hover */
+.custom-user-dropdown::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 100%;
+    height: 15px;
+    display: block;
+}
+
+/* 5. Xóa mũi tên tam giác */
+.custom-user-dropdown .dropdown-toggle::after {
+    display: none !important;
+}
+
+/* 6. Hover item */
+.dropdown-item:hover {
+    background-color: #fff5eb;
+    color: #FF8C00;
+}
