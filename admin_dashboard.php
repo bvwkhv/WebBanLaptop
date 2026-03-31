@@ -139,7 +139,7 @@ $products = $db->select($sql, 'ii', [$limit, $offset]);
                                     <td><?= number_format($p['price'], 0, ',', '.') ?>đ</td>
                                     <!-- <td>10</td> -->
                                     <td>
-                                        <a href="edit.php?id=1" class="btn btn-warning btn-sm">Sửa</a>
+                                        <a href="edit_product.php?id=<?= $p['product_id']?>" class="btn btn-warning btn-sm">Sửa</a>
                                         <a href="delete.php?id=1" class="btn btn-danger btn-sm" onclick="return confirm('Xóa nhé?')">Xóa</a>
                                         <a href="edit.php?id=1" class="btn btn-primary btn-sm">Chi tiết</a>
                                     </td>
