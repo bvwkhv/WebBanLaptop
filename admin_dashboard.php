@@ -140,7 +140,7 @@ $products = $db->select($sql, 'ii', [$limit, $offset]);
                                     <!-- <td>10</td> -->
                                     <td>
                                         <a href="edit_product.php?id=<?= $p['product_id']?>" class="btn btn-warning btn-sm">Sửa</a>
-                                        <a href="delete.php?id=1" class="btn btn-danger btn-sm" onclick="return confirm('Xóa nhé?')">Xóa</a>
+                                        <a href="delete_product.php?id=<?= $p['product_id']?>" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có muốn xóa không?')">Xóa</a>
                                         <a href="edit.php?id=1" class="btn btn-primary btn-sm">Chi tiết</a>
                                     </td>
                                 </tr>
