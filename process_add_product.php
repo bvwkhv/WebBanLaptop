@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $insert_s = $db->execute($sql_specs, 'isssss', $params_specs);
 
         if ($insert_s) {
-            echo "<script>alert('Thêm sản phẩm thành công!'); window.location='product_list.php';</script>";
+            echo "<script>alert('Thêm sản phẩm thành công!'); window.location='admin_dashboard.php';</script>";
         } else {
             echo "Lỗi khi thêm thông số kỹ thuật.";
         }
