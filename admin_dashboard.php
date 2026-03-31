@@ -1,9 +1,24 @@
 <?php
+require_once "database.php";
 session_start();
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     header("Location: login.php");
     exit();
 }
+$db = new database();
+// 1. Cấu hình phân trang
+$limit = 5;
+$current_page = isset($_GET['page']) ? $_GET['page'] : 1;
+$offset = ($current_page - 1) * $limit;
+
+// 2. Lấy tổng số sản phẩm để tính số trang
+$total_rows = $db->count("SELECT COUNT(*) FROM products");
+$total_pages = ceil($total_rows / $limit);
+
+// 3. Lấy dữ liệu sản phẩm cho trang hiện tại
+// Join với bảng brands nếu bạn muốn hiện tên hãng thay vì ID
+$sql = "SELECT * FROM products LIMIT ? OFFSET ?";
+$products = $db->select($sql, 'ii', [$limit, $offset]);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -96,7 +111,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
             <div class="card shadow-sm">
                 <div class="card-header bg-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Danh sách sản phẩm Laptop</h5>
-                    <a href="product_add.php" class="btn btn-success btn-sm">+ Thêm sản phẩm</a>
+                    <a href="add_product.php" class="btn btn-success btn-sm">+ Thêm sản phẩm</a>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -107,25 +122,46 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
                                     <th>Hình ảnh</th>
                                     <th>Tên Laptop</th>
                                     <th>Giá bán</th>
-                                    <th>Số lượng</th>
+                                    <!-- <th>Số lượng</th> -->
                                     <th>Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody>
+                                <?php foreach($products as $p){?>
                                 <tr>
-                                    <td>1</td>
-                                    <td><img src="../uploads/laptop1.jpg" width="50" alt=""></td>
-                                    <td>MSI Modern 14</td>
-                                    <td>15.000.000đ</td>
-                                    <td>10</td>
+                                    <td><?= $p['product_id']?></td>
+                                    <td><img src="image/<?= $p['image_url'] ?>" width="50"></td>
+                                    <td class="text-start">
+                                        <div class="product-name-truncate" title="<?= $p['product_name'] ?>">
+                                            <?= $p['product_name'] ?>
+                                        </div>
+                                    </td>
+                                    <td><?= number_format($p['price'], 0, ',', '.') ?>đ</td>
+                                    <!-- <td>10</td> -->
                                     <td>
                                         <a href="edit.php?id=1" class="btn btn-warning btn-sm">Sửa</a>
                                         <a href="delete.php?id=1" class="btn btn-danger btn-sm" onclick="return confirm('Xóa nhé?')">Xóa</a>
                                         <a href="edit.php?id=1" class="btn btn-primary btn-sm">Chi tiết</a>
                                     </td>
                                 </tr>
+                                <?php }?>
                             </tbody>
                         </table>
+                        <div class="pagination" style="margin-top: 20px; text-align: center;">
+        <?php if ($current_page > 1): ?>
+            <a href="?page=<?= $current_page - 1 ?>">Trước</a>
+        <?php endif; ?>
+
+        <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+            <a href="?page=<?= $i ?>" style="<?= ($i == $current_page) ? 'font-weight:bold; color:red;' : '' ?>">
+                <?= $i ?>
+            </a>
+        <?php endfor; ?>
+
+        <?php if ($current_page < $total_pages): ?>
+            <a href="?page=<?= $current_page + 1 ?>">Sau</a>
+        <?php endif; ?>
+    </div>
                     </div>
                 </div>
             </div>

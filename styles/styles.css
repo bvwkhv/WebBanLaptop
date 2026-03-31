@@ -172,3 +172,27 @@ h1{
     background-color: #fff5eb;
     color: #FF8C00;
 }
+/* Phân trang */
+.pagination a {
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    margin: 0 4px;
+    text-decoration: none;
+    color: #333;
+    border-radius: 4px;
+}
+.pagination a:hover {
+    background-color: #f4f4f4;
+}
+/* Tạo một class để khống chế hiển thị tên sản phẩm */
+.product-name-truncate {
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* Giới hạn đúng 2 dòng */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: break-word;
+    max-width: 400px; /* Bạn có thể điều chỉnh độ rộng cho phù hợp */
+    line-height: 1.4;
+    height: 2.8em; /* 1.4 x 2 dòng để cố định chiều cao hàng */
+}
