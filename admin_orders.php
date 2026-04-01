@@ -1,0 +1,143 @@
+<?php
+session_start();
+require_once "database.php";
+$db = new Database();
+
+// --- 1. XỬ LÝ CẬP NHẬT TRẠNG THÁI ---
+if (isset($_POST['update_status'])) {
+    $order_id = $_POST['order_id'];
+    $new_status = $_POST['status'];
+    
+    $sql = "UPDATE orders SET status = ? WHERE order_id = ?";
+    $db->insert($sql, 'si', [$new_status, $order_id]);
+    echo "success";
+    exit;
+}
+
+// --- 2. LẤY DANH SÁCH TẤT CẢ ĐƠN HÀNG ---
+$orders = $db->select("SELECT * FROM orders ORDER BY order_id DESC");
+?>
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý đơn hàng</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        body { background-color: #fdfae7; }
+        .table-card { background: white; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .status-select { border-radius: 20px; font-size: 0.9rem; padding: 0.375rem 1rem; cursor: pointer; }
+        /* Màu sắc cho từng trạng thái */
+        .status-waiting { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+        .status-confirmed { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .status-shipped { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .status-cancelled { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold mb-0">
+            <i class="bi bi-box-seam me-2 text-primary"></i>QUẢN LÝ ĐƠN HÀNG
+        </h2>
+        <div class="d-flex gap-2">
+            <a href="admin_dashboard.php" class="btn btn-dark rounded-pill px-4 shadow-sm">
+                <i class="bi bi-speedometer2 me-1"></i> Trang Admin
+            </a>
+            <a href="admin_statistics.php" class="btn btn-primary rounded-pill shadow-sm">
+                <i class="bi bi-graph-up me-1"></i> Xem Thống kê
+            </a>
+        </div>
+    </div>
+
+    <div class="table-card p-4">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Mã đơn</th>
+                        <th>Khách hàng</th>
+                        <th>Ngày đặt</th>
+                        <th>Tổng tiền</th>
+                        <th class="text-center">Trạng thái duyệt</th>
+                        <th class="text-center">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach($orders as $row): ?>
+                    <tr id="row-<?= $row['order_id'] ?>">
+                        <td class="fw-bold">#<?= $row['order_id'] ?></td>
+                        <td>
+                            <div class="fw-bold"><?= htmlspecialchars($row['customer_name']) ?></div>
+                            <div class="small text-muted"><?= $row['phone'] ?></div>
+                        </td>
+                        <td><?= date('d/m/Y', strtotime($row['order_date'])) ?></td>
+                        <td class="fw-bold text-primary"><?= number_format($row['total_amount'], 0, ',', '.') ?>đ</td>
+                        <td class="text-center">
+                            <select class="form-select form-select-sm status-change status-select 
+                                <?= $row['status'] == 'Chờ xử lý' ? 'status-waiting' : ($row['status'] == 'Đã xác nhận' ? 'status-confirmed' : ($row['status'] == 'Đã giao' ? 'status-shipped' : 'status-cancelled')) ?>" 
+                                data-id="<?= $row['order_id'] ?>">
+                                <option value="Chờ xử lý" <?= $row['status'] == 'Chờ xử lý' ? 'selected' : '' ?>>🕒 Chờ xử lý</option>
+                                <option value="Đã xác nhận" <?= $row['status'] == 'Đã xác nhận' ? 'selected' : '' ?>>✅ Đã xác nhận</option>
+                                <option value="Đã giao" <?= $row['status'] == 'Đã giao' ? 'selected' : '' ?>>🚚 Đã giao</option>
+                                <option value="Đã hủy" <?= $row['status'] == 'Đã hủy' ? 'selected' : '' ?>>❌ Đã hủy</option>
+                            </select>
+                        </td>
+                        <td class="text-center">
+                            <a href="order_details.php?id=<?= $row['order_id'] ?>" class="btn btn-sm btn-outline-info rounded-pill">
+                                <i class="bi bi-eye"></i> Xem chi tiết
+                            </a>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+document.querySelectorAll('.status-change').forEach(select => {
+    select.addEventListener('change', function() {
+        const orderId = this.getAttribute('data-id');
+        const newStatus = this.value;
+        const currentSelect = this;
+
+        // Hiệu ứng loading nhẹ
+        currentSelect.style.opacity = '0.5';
+
+        const formData = new FormData();
+        formData.append('update_status', 'true');
+        formData.append('order_id', orderId);
+        formData.append('status', newStatus);
+
+        fetch('admin_orders.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.text())
+        .then(data => {
+            if(data.trim() === "success") {
+                // Cập nhật lại màu sắc Class của Select cho khớp trạng thái mới
+                currentSelect.classList.remove('status-waiting', 'status-confirmed', 'status-shipped', 'status-cancelled');
+                
+                if(newStatus === 'Chờ xử lý') currentSelect.classList.add('status-waiting');
+                else if(newStatus === 'Đã xác nhận') currentSelect.classList.add('status-confirmed');
+                else if(newStatus === 'Đã giao') currentSelect.classList.add('status-shipped');
+                else if(newStatus === 'Đã hủy') currentSelect.classList.add('status-cancelled');
+
+                currentSelect.style.opacity = '1';
+                
+                // Hiển thị thông báo nhỏ (Toast)
+                alert("Đã cập nhật đơn hàng #" + orderId + " thành: " + newStatus);
+            }
+        });
+    });
+});
+</script>
+
+</body>
+</html>
