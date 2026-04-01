@@ -28,24 +28,8 @@
         <!-- menu item -->
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         <li class="nav-item">
-          <a class="nav-link active" aria-current="page" href="#">Quản lý sản phẩm</a>
-        </li>
-        <li class="nav-item">
           <a class="nav-link" aria-current="page" href="#">Danh mục</a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link" aria-current="page" href="#">Quản lý đơn hàng</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" aria-current="page" href="#">Quản lý khách hàng</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" aria-current="page" href="#">Thống kê</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" aria-current="page" href="#">Hỗ trợ khách hàng</a>
-        </li>
-        
       </ul>
 
       <!-- người dùng và giỏ hàng -->
@@ -62,7 +46,9 @@
         <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userMenu">
     <?php if (isset($_SESSION['user_id'])): ?>
         <li><h6 class="dropdown-header text-dark">Chào, <?= $_SESSION['username'] ?></h6></li>
-        <li><a class="dropdown-item" href="profile.php">Thông tin tài khoản</a></li>
+        <li><a class="dropdown-item" href="profile.php">Thông tin tài khoản</a>
+            <a class="dropdown-item" href="order_history.php">Lịch sử đơn hàng</a>
+        </li>
         
         <?php if ($_SESSION['role'] == 'admin'): ?>
             <li><a class="dropdown-item fw-bold text-primary" href="admin_dashboard.php">Trang Quản Trị</a></li>
@@ -78,7 +64,7 @@
 </ul>
     </div>
 
-    <a href="#" class="btn btn-danger btn-sm d-inline-flex justify-content-center align-items-center shopping-cart ms-2">
+    <a href="view_cart.php" class="btn btn-danger btn-sm d-inline-flex justify-content-center align-items-center shopping-cart ms-2">
         <svg xmlns="http://www.w3.org/2000/svg" width="30px" height="26px" viewBox="0 0 640 512">
             <path fill="rgb(255, 255, 255)" d="M24-16C10.7-16 0-5.3 0 8S10.7 32 24 32l45.3 0c3.9 0 7.2 2.8 7.9 6.6l52.1 286.3c6.2 34.2 36 59.1 70.8 59.1L456 384c13.3 0 24-10.7 24-24s-10.7-24-24-24l-255.9 0c-11.6 0-21.5-8.3-23.6-19.7l-5.1-28.3 303.6 0c30.8 0 57.2-21.9 62.9-52.2L568.9 69.9C572.6 50.2 557.5 32 537.4 32l-412.7 0-.4-2c-4.8-26.6-28-46-55.1-46L24-16zM208 512a48 48 0 1 0 0-96 48 48 0 1 0 0 96zm224 0a48 48 0 1 0 0-96 48 48 0 1 0 0 96z"/>
         </svg>

@@ -48,17 +48,55 @@ class Database
         return $total;
     }
     // Thực thi lệnh INSERT, UPDATE, DELETE 
-    public function execute($sql, $type = '', $params = [])
-    {
-        $stmt = $this->conn->prepare($sql);
-        if (!empty($types)) {
-            $stmt->bind_param($types, ...$params);
-        }
-        $row = $stmt->execute();
+    // public function execute($sql, $type = '', $params = [])
+    // {
+    //     $stmt = $this->conn->prepare($sql);
+    //     if (!empty($types)) {
+    //         $stmt->bind_param($types, ...$params);
+    //     }
+    //     $row = $stmt->execute();
 
-        $stmt->close();
-        return $row;
+    //     $stmt->close();
+    //     return $row;
+    // }
+    public function execute($sql, $types = '', $params = []) 
+    {
+    $stmt = $this->conn->prepare($sql);
+    
+    // Kiểm tra: Nếu có tham số truyền vào thì mới bind
+    if (!empty($types) && !empty($params)) {
+        // Chú ý dùng đúng biến $types đã khai báo ở trên
+        $stmt->bind_param($types, ...$params); 
     }
+    
+    $row = $stmt->execute();
+    $stmt->close();
+    return $row;
+    }
+
+    // THÊM HÀM NÀY: Để lấy ID mới nhất vừa insert
+    public function lastInsertId() 
+    {
+        return $this->conn->insert_id;
+    }
+
+    // Hàm INSERT – Trả về ID của bản ghi vừa thêm
+public function insert($sql, $types = '', $params = [])
+{
+    $stmt = $this->conn->prepare($sql);
+    if (!empty($types)) {
+        $stmt->bind_param($types, ...$params);
+    }
+    
+    if ($stmt->execute()) {
+        $last_id = $this->conn->insert_id; // Lấy ID vừa tự động tạo (order_id)
+        $stmt->close();
+        return $last_id; 
+    } else {
+        $stmt->close();
+        return false;
+    }
+}
 
     // Hàm ngắt kết nối 
     public function close()
