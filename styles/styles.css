@@ -1,6 +1,20 @@
+html, body {
+    height: 100% !important; /* Thêm important để chắc chắn */
+    margin: 0;
+}
+
 body{
     background-color: #fff4c5;
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 100vh !important; /* Xóa dòng min-vh-100; bị sai đi */
 }
+
+/* Thêm mới: Thẻ bọc nội dung chính */
+.flex-grow-1 {
+    flex: 1 0 auto !important;
+}
+
 .navbar-brand img{
     width: 60px;
 }
@@ -23,12 +37,13 @@ body{
     height: 320px;
 }
 footer{
+    background-color: #212529; /* Màu tối giống text-bg-dark */
     color: white;
     text-align: center;
     padding: 15px;
     font-size: 14px;
     width: 100%;
-    height: 10%;
+    flex-shrink: 0; /* Không cho footer bị co lại */
 }
 footer div p{
     padding-top: 10px;
@@ -156,4 +171,28 @@ h1{
 .dropdown-item:hover {
     background-color: #fff5eb;
     color: #FF8C00;
+}
+/* Phân trang */
+.pagination a {
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    margin: 0 4px;
+    text-decoration: none;
+    color: #333;
+    border-radius: 4px;
+}
+.pagination a:hover {
+    background-color: #f4f4f4;
+}
+/* Tạo một class để khống chế hiển thị tên sản phẩm */
+.product-name-truncate {
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* Giới hạn đúng 2 dòng */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: break-word;
+    max-width: 400px; /* Bạn có thể điều chỉnh độ rộng cho phù hợp */
+    line-height: 1.4;
+    height: 2.8em; /* 1.4 x 2 dòng để cố định chiều cao hàng */
 }
