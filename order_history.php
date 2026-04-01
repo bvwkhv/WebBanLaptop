@@ -30,7 +30,14 @@ $orders = $db->select($sql, 'i', [$current_user_id]);
 </head>
 <body>
 <div class="container mt-5">
-    <h3 class="mb-4">Lịch sử mua hàng của bạn</h3>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">
+            <i class="bi bi-clock-history me-2"></i>LỊCH SỬ ĐẶT HÀNG
+        </h2>
+        <a href="index.php" class="btn btn-outline-success rounded-pill px-4 shadow-sm">
+            <i class="bi bi-house-door me-1"></i> <b>Tiếp tục mua sắm</b>
+        </a>
+    </div>
     <div class="card shadow-sm border-0">
         <div class="card-body">
             <table class="table table-hover">

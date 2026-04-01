@@ -102,8 +102,8 @@ $products = $db->select($sql, 'ii', [$limit, $offset]);
                 <a href="dashboard.php" class="list-group-item list-group-item-action active" style="background-color: #FF8C00; border-color: #FF8C00;">
                     Quản lý sản phẩm
                 </a>
-                <a href="manage_orders.php" class="list-group-item list-group-item-action">Quản lý đơn hàng</a>
-                <a href="manage_users.php" class="list-group-item list-group-item-action">Quản lý khách hàng</a>
+                <a href="admin_orders.php" class="list-group-item list-group-item-action">Quản lý đơn hàng</a>
+                <a href="admin_statistics.php" class="list-group-item list-group-item-action">Thống kê</a>
             </div>
         </div>
 
@@ -141,7 +141,6 @@ $products = $db->select($sql, 'ii', [$limit, $offset]);
                                     <td>
                                         <a href="edit_product.php?id=<?= $p['product_id']?>" class="btn btn-warning btn-sm">Sửa</a>
                                         <a href="delete_product.php?id=<?= $p['product_id']?>" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có muốn xóa không?')">Xóa</a>
-                                        <a href="edit.php?id=1" class="btn btn-primary btn-sm">Chi tiết</a>
                                     </td>
                                 </tr>
                                 <?php }?>
@@ -172,8 +171,8 @@ $products = $db->select($sql, 'ii', [$limit, $offset]);
         <!-- Footer -->
         <footer class="text-bg-dark py-5">
         <div>
-            <!-- <p>© 2026 - Đồ án Chuyên ngành Công nghệ thông tin</p> -->
-            <!-- <p>Dữ liệu sản phẩm được tổng hợp từ FPT-Shop và FIT-TDC 2019</p> -->
+            <p>© 2026 - Đồ án Chuyên ngành Công nghệ thông tin</p>
+            <p>Dữ liệu sản phẩm được tổng hợp từ FPT-Shop và FIT-TDC 2019</p>
         </div>
         </footer>
 

@@ -24,21 +24,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && !empty($_SESSION['cart'])) {
 $customer_name = $_POST['fullname']; // Vẫn lấy "Nguyễn Văn Tuấn" bình thường
 
 // 1. Câu lệnh SQL (Phải có đủ 9 dấu hỏi tương ứng 9 cột)
-$sql_order = "INSERT INTO orders (user_id, customer_name, email, phone, address, note, total_amount, payment_method, status) 
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"; // Đã thêm 1 dấu ? cuối cùng
+$sql_order = "INSERT INTO orders (user_id, customer_name, email, phone, address, note, total_amount, payment_method, status, order_date) 
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"; 
 
-// 2. Mảng dữ liệu truyền vào (Phải có đủ 9 biến)
-// Nhớ thêm $user_id vào đầu danh sách nếu bạn lấy từ Session
-$order_id = $db->insert($sql_order, 'isssssdss', [
-    $_SESSION['user_id'], // 1. user_id (kiểu i - integer)
-    $customer_name,       // 2. customer_name
-    $email,               // 3. email
-    $phone,               // 4. phone
-    $address,             // 5. address
-    $note,                // 6. note
-    $total_amount,        // 7. total_amount (kiểu d - double/float)
-    $payment_method,      // 8. payment_method
-    'Chờ xử lý'           // 9. status
+// Thêm tham số ngày tháng vào mảng (tổng cộng 10 tham số)
+$order_id = $db->insert($sql_order, 'isssssdsss', [
+    $_SESSION['user_id'], 
+    $customer_name, 
+    $email, 
+    $phone, 
+    $address, 
+    $note, 
+    $total_amount, 
+    $payment_method, 
+    'Chờ xử lý',
+    date('Y-m-d') // QUAN TRỌNG: Lưu ngày hiện tại để biểu đồ lấy được dữ liệu
 ]);
 
     if ($order_id) {
