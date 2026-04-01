@@ -4,13 +4,19 @@
     $db = new Database();
     $id = $_GET["id"];
 
-    $sql ="SELECT p.product_name, p.image_url, ps.cpu, ps.ram, ps.storage, ps.gpu, ps.screen 
-            FROM products AS p 
-            INNER JOIN product_specs AS ps ON p.product_id = ps.product_id 
-            WHERE p.product_id = '$id'";
-    
-    $result = $db->select($sql);
+    $sql ="SELECT p.product_id, p.product_name, p.image_url, p.price, ps.cpu, ps.ram, ps.storage, ps.gpu, ps.screen 
+        FROM products AS p 
+        INNER JOIN product_specs AS ps ON p.product_id = ps.product_id 
+        WHERE p.product_id = ?";
+
+// Truyền thêm 'i' (integer) và mảng [$id] để khớp với dấu '?'
+$result = $db->select($sql, 'i', [$id]); 
+
+if (!empty($result)) {
     $products = $result[0];
+} else {
+    die("Không tìm thấy sản phẩm!");
+}
     
 ?>
 <!DOCTYPE html>
@@ -125,9 +131,18 @@
     </div>
 
     <!-- section -->
+    <div class="text-center my-3">
+    <span class="text-muted text-decoration-line-through" style="font-size: 14px;">
+        <?= number_format($products['price'] * 1.1, 0, ',', '.') ?>đ
+    </span>
+    <h3 class="fw-bolder text-danger" style="font-size: 24px;">
+        <?= number_format($products['price'], 0, ',', '.') ?> VNĐ
+    </h3>
+</div>
+    
     <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
         <div class="text-center">
-            <a class="btn btn-outline-dark bg-primary mt-auto" href="#"><svg xmlns="http://www.w3.org/2000/svg" width="50px" height="50px" viewBox="0 0 640 512"><!--!Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.--><path d="M24-16C10.7-16 0-5.3 0 8S10.7 32 24 32l45.3 0c3.9 0 7.2 2.8 7.9 6.6l52.1 286.3c6.2 34.2 36 59.1 70.8 59.1L456 384c13.3 0 24-10.7 24-24s-10.7-24-24-24l-255.9 0c-11.6 0-21.5-8.3-23.6-19.7l-5.1-28.3 303.6 0c30.8 0 57.2-21.9 62.9-52.2L568.9 69.9C572.6 50.2 557.5 32 537.4 32l-412.7 0-.4-2c-4.8-26.6-28-46-55.1-46L24-16zM208 512a48 48 0 1 0 0-96 48 48 0 1 0 0 96zm224 0a48 48 0 1 0 0-96 48 48 0 1 0 0 96z"/></svg>
+            <a class="btn btn-outline-dark bg-primary mt-auto" href="add_to_cart.php?id=<?= $products['product_id']?>"><svg xmlns="http://www.w3.org/2000/svg" width="50px" height="50px" viewBox="0 0 640 512"><!--!Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.--><path d="M24-16C10.7-16 0-5.3 0 8S10.7 32 24 32l45.3 0c3.9 0 7.2 2.8 7.9 6.6l52.1 286.3c6.2 34.2 36 59.1 70.8 59.1L456 384c13.3 0 24-10.7 24-24s-10.7-24-24-24l-255.9 0c-11.6 0-21.5-8.3-23.6-19.7l-5.1-28.3 303.6 0c30.8 0 57.2-21.9 62.9-52.2L568.9 69.9C572.6 50.2 557.5 32 537.4 32l-412.7 0-.4-2c-4.8-26.6-28-46-55.1-46L24-16zM208 512a48 48 0 1 0 0-96 48 48 0 1 0 0 96zm224 0a48 48 0 1 0 0-96 48 48 0 1 0 0 96z"/></svg>
             <b>Thêm vào giỏ hàng</b></a>
         </div>
     </div>

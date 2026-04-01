@@ -80,6 +80,24 @@ class Database
         return $this->conn->insert_id;
     }
 
+    // Hàm INSERT – Trả về ID của bản ghi vừa thêm
+public function insert($sql, $types = '', $params = [])
+{
+    $stmt = $this->conn->prepare($sql);
+    if (!empty($types)) {
+        $stmt->bind_param($types, ...$params);
+    }
+    
+    if ($stmt->execute()) {
+        $last_id = $this->conn->insert_id; // Lấy ID vừa tự động tạo (order_id)
+        $stmt->close();
+        return $last_id; 
+    } else {
+        $stmt->close();
+        return false;
+    }
+}
+
     // Hàm ngắt kết nối 
     public function close()
     {
