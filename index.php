@@ -28,24 +28,8 @@
         <!-- menu item -->
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         <li class="nav-item">
-          <a class="nav-link active" aria-current="page" href="#">Quản lý sản phẩm</a>
-        </li>
-        <li class="nav-item">
           <a class="nav-link" aria-current="page" href="#">Danh mục</a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link" aria-current="page" href="#">Quản lý đơn hàng</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" aria-current="page" href="#">Quản lý khách hàng</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" aria-current="page" href="#">Thống kê</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" aria-current="page" href="#">Hỗ trợ khách hàng</a>
-        </li>
-        
       </ul>
 
       <!-- người dùng và giỏ hàng -->
@@ -62,7 +46,9 @@
         <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userMenu">
     <?php if (isset($_SESSION['user_id'])): ?>
         <li><h6 class="dropdown-header text-dark">Chào, <?= $_SESSION['username'] ?></h6></li>
-        <li><a class="dropdown-item" href="profile.php">Thông tin tài khoản</a></li>
+        <li><a class="dropdown-item" href="profile.php">Thông tin tài khoản</a>
+            <a class="dropdown-item" href="order_history.php">Lịch sử đơn hàng</a>
+        </li>
         
         <?php if ($_SESSION['role'] == 'admin'): ?>
             <li><a class="dropdown-item fw-bold text-primary" href="admin_dashboard.php">Trang Quản Trị</a></li>
