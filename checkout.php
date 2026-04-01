@@ -17,7 +17,7 @@ if (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) {
             <div class="col-md-7">
                 <div class="card shadow-sm p-4">
                     <h4 class="mb-3">Thông tin giao hàng</h4>
-                    <form action="process_checkout.php" method="POST">
+                    <form action="confirmation.php" method="POST">
     <div class="mb-3">
         <label class="form-label">Họ và tên</label>
         <input type="text" name="fullname" class="form-control" placeholder="Nguyễn Văn A" required>
@@ -43,7 +43,18 @@ if (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) {
         <textarea name="note" class="form-control" rows="3" placeholder="Ví dụ: Giao hàng giờ hành chính, gọi trước khi đến..."></textarea>
     </div>
 
-    <button type="submit" class="btn btn-primary btn-lg w-100">Xác nhận đặt hàng</button>
+    <h5>Phương thức thanh toán</h5>
+    <div class="form-check">
+        <input class="form-check-input" type="radio" name="payment_method" value="COD" checked>
+        <label class="form-check-label">Thanh toán khi nhận hàng</label>
+    </div>
+    <div class="form-check">
+        <input class="form-check-input" type="radio" name="payment_method" value="Chuyển khoản">
+        <label class="form-check-label">Chuyển khoản ngân hàng</label>
+    </div>
+
+    
+    <button type="submit" class="btn btn-primary btn-lg w-100">Tiếp tục</button>
 </form>
                 </div>
             </div>
