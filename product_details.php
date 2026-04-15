@@ -162,6 +162,54 @@ if (!empty($result)) {
         </div>
     </div>
 
+    <div class="card shadow-sm border-0 rounded-4 p-4 mt-5">
+    <h4 class="fw-bold mb-4">Đánh giá sản phẩm</h4>
+    <?php if(isset($_SESSION['user_id'])): ?>
+        <form action="process_review.php" method="POST">
+            <input type="hidden" name="product_id" value="<?= $id ?>">
+            
+            <div class="mb-3">
+                <label class="form-label fw-bold text-warning">Chọn số sao:</label>
+                <select name="rating" class="form-select w-auto rounded-pill">
+                    <option value="5">⭐⭐⭐⭐⭐ (5/5)</option>
+                    <option value="4">⭐⭐⭐⭐ (4/5)</option>
+                    <option value="3">⭐⭐⭐ (3/5)</option>
+                    <option value="2">⭐⭐ (2/5)</option>
+                    <option value="1">⭐ (1/5)</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Nội dung bình luận:</label>
+                <textarea name="comment" class="form-control rounded-4" rows="3" placeholder="Chia sẻ cảm nhận của bạn về máy..."></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary rounded-pill px-4">Gửi đánh giá</button>
+        </form>
+    <?php else: ?>
+        <p class="text-muted">Vui lòng <a href="login.php">đăng nhập</a> để bình luận.</p>
+    <?php endif; ?>
+
+    <hr class="my-5">
+
+    <h5 class="fw-bold mb-4">Khách hàng nói gì về sản phẩm này</h5>
+    <?php
+    $reviews = $db->select("SELECT r.*, u.username FROM reviews r JOIN users u ON r.user_id = u.user_id WHERE r.product_id = ? ORDER BY r.created_at DESC", "i", [$id]);
+    foreach($reviews as $r):
+    ?>
+        <div class="mb-4 border-bottom pb-3">
+            <div class="d-flex justify-content-between">
+                <span class="fw-bold text-primary"><?= htmlspecialchars($r['username']) ?></span>
+                <span class="text-warning">
+                    <?= str_repeat('⭐', $r['rating']) ?>
+                </span>
+            </div>
+            <p class="mb-1 text-dark"><?= htmlspecialchars($r['comment']) ?></p>
+            <small class="text-muted"><?= date('d/m/Y H:i', strtotime($r['created_at'])) ?></small>
+        </div>
+    <?php endforeach; ?>
+</div>
+
     <footer class="text-bg-dark py-5">
         <div>
             <p>© 2026 - Đồ án Chuyên ngành Công nghệ thông tin</p>
