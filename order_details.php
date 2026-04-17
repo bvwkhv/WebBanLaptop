@@ -82,7 +82,7 @@ $items = $db->select($sql_items, 'i', [$order_id]);
             </table>
             
             <div class="mt-4">
-                <a href="index.php" class="btn btn-outline-secondary">Quay về trang chủ</a>
+                <a href="order_history.php" class="btn btn-outline-secondary">Quay lại</a>
             </div>
         </div>
     </div>

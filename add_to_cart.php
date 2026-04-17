@@ -13,7 +13,7 @@ if ($id) {
     // 3. Thực hiện truy vấn
     $result = $db->select($sql, 'i', [$id]);
 
-    // Debug thử (Xóa dòng này sau khi chạy được)
+    // Debug thử
     // var_dump($result); die(); 
 
     if (count($result) > 0) {

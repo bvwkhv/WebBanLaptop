@@ -16,7 +16,6 @@ $total_rows = $db->count("SELECT COUNT(*) FROM products");
 $total_pages = ceil($total_rows / $limit);
 
 // 3. Lấy dữ liệu sản phẩm cho trang hiện tại
-// Join với bảng brands nếu bạn muốn hiện tên hãng thay vì ID
 $sql = "SELECT * FROM products LIMIT ? OFFSET ?";
 $products = $db->select($sql, 'ii', [$limit, $offset]);
 ?>
@@ -99,7 +98,7 @@ $products = $db->select($sql, 'ii', [$limit, $offset]);
     <div class="row">
         <div class="col-md-2">
             <div class="list-group shadow-sm">
-                <a href="dashboard.php" class="list-group-item list-group-item-action active" style="background-color: #FF8C00; border-color: #FF8C00;">
+                <a href="admin_dashboard.php" class="list-group-item list-group-item-action active" style="background-color: #FF8C00; border-color: #FF8C00;">
                     Quản lý sản phẩm
                 </a>
                 <a href="admin_orders.php" class="list-group-item list-group-item-action">Quản lý đơn hàng</a>
