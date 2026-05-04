@@ -16,6 +16,22 @@ if (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) {
         .card { border-radius: 15px; }
         .form-label { font-weight: bold; }
         .error-text { font-size: 0.85rem; color: #dc3545; display: none; }
+        
+        /* CSS cho khu vực QR */
+        #qrCodeContainer {
+            display: none; 
+            text-align: center;
+            background: #fff;
+            border: 2px dashed #0d6efd;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        #qrCodeContainer img {
+            max-width: 220px;
+            height: auto;
+            border: 1px solid #eee;
+        }
     </style>
 </head>
 <body>
@@ -35,9 +51,7 @@ if (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) {
                         <div class="mb-3">
                             <label class="form-label">Email</label>
                             <input type="email" name="email" id="email" class="form-control save-cb" 
-                                   placeholder="name@example.com" required
-                                   oninvalid="this.setCustomValidity('Vui lòng nhập đúng định dạng email (ví dụ: abc@gmail.com)')"
-                                   oninput="this.setCustomValidity('')">
+                                   placeholder="name@example.com" required>
                         </div>
 
                         <div class="mb-3">
@@ -57,21 +71,44 @@ if (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) {
 
                         <div class="mb-3">
                             <label class="form-label">Ghi chú đơn hàng</label>
-                            <textarea name="note" id="note" class="form-control save-cb" rows="3" 
+                            <textarea name="note" id="note" class="form-control save-cb" rows="2" 
                                       maxlength="500" placeholder="Ví dụ: Giao giờ hành chính..."></textarea>
                         </div>
 
                         <h5 class="mt-4">Phương thức thanh toán</h5>
-                        <div class="form-check text-payment">
-                            <input class="form-check-input save-cb" type="radio" name="payment_method" id="payment_cod" value="COD" checked>
+                        <div class="form-check">
+                            <input class="form-check-input save-cb" type="radio" name="payment_method" id="payment_cod" value="COD" checked onclick="toggleQR(false)">
                             <label class="form-check-label" for="payment_cod">Thanh toán khi nhận hàng (COD)</label>
                         </div>
-                        <div class="form-check mb-4">
-                            <input class="form-check-input save-cb" type="radio" name="payment_method" id="payment_bank" value="Chuyển khoản">
-                            <label class="form-check-label" for="payment_bank">Chuyển khoản ngân hàng</label>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input save-cb" type="radio" name="payment_method" id="payment_bank" value="Chuyển khoản" onclick="toggleQR(true)">
+                            <label class="form-check-label" for="payment_bank">Chuyển khoản ngân hàng (VietQR)</label>
                         </div>
 
-                        <button type="submit" class="btn btn-primary btn-lg w-100 shadow-sm" id="btnSubmit">Tiếp tục thanh toán</button>
+                        <!-- KHU VỰC HIỂN THỊ MÃ QR -->
+                        <?php
+                            $total = 0;
+                            foreach($_SESSION['cart'] as $item) { $total += $item['price'] * $item['qty']; }
+                            
+                            // Cấu hình ngân hàng (Bạn thay đổi thông tin ở đây)
+                            $BANK_ID = "MB"; // Ví dụ: VCB, MB, TCB, ICB...
+                            $ACCOUNT_NO = "0977960916"; // Số tài khoản nhận tiền
+                            $ACCOUNT_NAME = "NGUYEN VAN TUAN"; // Tên chủ tài khoản (không dấu)
+                            $DESCRIPTION = "THANH TOAN DON HANG " . time();
+                            
+                            $qr_url = "https://img.vietqr.io/image/$BANK_ID-$ACCOUNT_NO-compact2.png?amount=$total&addInfo=" . urlencode($DESCRIPTION) . "&accountName=" . urlencode($ACCOUNT_NAME);
+                        ?>
+                        <div id="qrCodeContainer" class="mb-4 shadow-sm">
+                            <p class="mb-2 small text-muted">Quét mã VietQR để thanh toán: <b><?= number_format($total, 0, ',', '.') ?>đ</b></p>
+                            <img src="<?= $qr_url ?>" alt="QR Code">
+                            <div class="mt-2 small text-start ps-3 d-inline-block">
+                                <div><b>Ngân hàng:</b> <?= $BANK_ID ?></div>
+                                <div><b>Số TK:</b> <?= $ACCOUNT_NO ?></div>
+                                <div><b>Chủ TK:</b> <?= $ACCOUNT_NAME ?></div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-lg w-100 shadow-sm mt-3" id="btnSubmit">Xác nhận đặt hàng</button>
                     </form>
                 </div>
             </div>
@@ -81,10 +118,8 @@ if (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) {
                     <h4 class="mb-3">Đơn hàng của bạn</h4>
                     <ul class="list-group mb-3">
                         <?php 
-                        $total = 0;
                         foreach($_SESSION['cart'] as $item): 
                             $subtotal = $item['price'] * $item['qty'];
-                            $total += $subtotal;
                         ?>
                         <li class="list-group-item d-flex justify-content-between lh-sm">
                             <div>
@@ -105,17 +140,25 @@ if (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) {
     </div>
 
     <script>
-    // --- PHẦN 1: LƯU VÀ KHÔI PHỤC DỮ LIỆU KHI F5 ---
     const formId = "checkoutForm"; 
     const saveInputs = document.querySelectorAll(".save-cb");
 
-    // Khi trang tải xong, kiểm tra xem có dữ liệu cũ trong localStorage không
+    // Hàm ẩn/hiện mã QR
+    function toggleQR(show) {
+        const qrContainer = document.getElementById('qrCodeContainer');
+        qrContainer.style.display = show ? 'block' : 'none';
+    }
+
     window.onload = () => {
+        // Khôi phục dữ liệu đã nhập
         saveInputs.forEach(input => {
             const savedValue = localStorage.getItem(`${formId}_${input.name}`);
             if (savedValue) {
                 if (input.type === 'radio') {
-                    if (input.value === savedValue) input.checked = true;
+                    if (input.value === savedValue) {
+                        input.checked = true;
+                        if (input.id === 'payment_bank') toggleQR(true);
+                    }
                 } else {
                     input.value = savedValue;
                 }
@@ -123,7 +166,7 @@ if (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) {
         });
     };
 
-    // Lắng nghe sự kiện nhập liệu để lưu vào localStorage ngay lập tức
+    // Lưu dữ liệu khi nhập
     saveInputs.forEach(input => {
         input.addEventListener("input", () => {
             if (input.type === 'radio') {
@@ -135,21 +178,16 @@ if (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) {
         });
     });
 
-    // Khi nhấn nút đặt hàng thành công, xóa dữ liệu đã lưu để không bị "dính" cho lần mua sau
+    // Kiểm tra phone và xóa local khi submit
     document.getElementById('checkoutForm').addEventListener('submit', function(e) {
         const phone = document.getElementById('phoneInput').value.trim();
-        const errorDiv = document.getElementById('phoneError');
-        const phoneInput = document.getElementById('phoneInput');
-        
         const isNumeric = /^\d+$/.test(phone);
         
         if (!isNumeric || phone.length < 10 || phone.length > 11) {
             e.preventDefault();
-            errorDiv.style.display = 'block';
-            phoneInput.classList.add('is-invalid');
-            phoneInput.focus();
+            document.getElementById('phoneError').style.display = 'block';
+            document.getElementById('phoneInput').classList.add('is-invalid');
         } else {
-            // Nếu form hợp lệ, xóa bộ nhớ tạm trước khi chuyển trang
             saveInputs.forEach(input => {
                 localStorage.removeItem(`${formId}_${input.name}`);
             });
