@@ -238,6 +238,54 @@ if (isset($_SESSION['user_id'])) {
 
     <!-- nhúng js -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+// Hàm gửi dữ liệu về server
+function trackEvent(type, targetId) {
+    fetch('track_event.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            event_type: type,
+            target_id: targetId
+        })
+    });
+}
 
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. Theo dõi khi nhấn nút "Thêm vào giỏ hàng"
+    const addToCartBtn = document.querySelector('.btn-outline-dark.bg-primary');
+    if(addToCartBtn) {
+        addToCartBtn.addEventListener('click', function() {
+            trackEvent('Nhấn nút Thêm giỏ hàng', '<?= $id ?>');
+        });
+    }
+
+    // 2. Theo dõi khi người dùng mở xem cấu hình (thẻ details)
+    const detailsElements = document.querySelectorAll('details');
+    detailsElements.forEach(el => {
+        el.addEventListener('toggle', function() {
+            if (this.open) {
+                const specType = this.querySelector('summary').innerText;
+                trackEvent('Xem cấu hình', specType + ' - Sản phẩm: <?= $id ?>');
+            }
+        });
+    });
+
+    // 3. Theo dõi hành vi cuộn chuột (Scroll)
+    // Nếu người dùng cuộn xuống tới phần bình luận, ta ghi nhận là họ có quan tâm đánh giá
+    let scrolledToReviews = false;
+    window.addEventListener('scroll', function() {
+        const reviewSection = document.querySelector('.card.shadow-sm.mt-5');
+        if (reviewSection && !scrolledToReviews) {
+            const rect = reviewSection.getBoundingClientRect();
+            if (rect.top < window.innerHeight) {
+                trackEvent('Cuộn xem đánh giá', '<?= $id ?>');
+                scrolledToReviews = true; // Chỉ gửi 1 lần mỗi lần load trang
+            }
+        }
+    });
+});
+</script>
 </body>
 </html>
