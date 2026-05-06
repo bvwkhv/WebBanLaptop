@@ -50,6 +50,8 @@ $news_list = $db->select($sql_news, $types_news, $params_news);
     <meta charset="UTF-8">
     <title>Tin Tức</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles/styles.css">
     <style>
         body { background-color: #fdfae6; }
         .filter-sidebar { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
@@ -63,60 +65,58 @@ $news_list = $db->select($sql_news, $types_news, $params_news);
     </style>
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-light border-bottom">
-  <div class="container">
-    <a class="navbar-brand home" href="index.php">Home</a>
-    <a class="navbar-brand home" href="news_list.php">Tin tức</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0"></ul>
-
-      <form class="d-flex mx-auto mt-2 mt-lg-0" action="index.php" method="GET" style="width: 100%; max-width: 500px;">
-        <input class="form-control me-2" type="search" name="search" placeholder="Tìm kiếm nhanh..." value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
-        <button class="btn btn-success" type="submit">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" viewBox="0 0 512 512">
-            <path fill="currentColor" d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376C296.3 401.1 253.9 416 208 416 93.1 416 0 322.9 0 208S93.1 0 208 0 416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"/>
-          </svg>
-        </button>
-      </form>
-
-      <div class="ms-auto d-inline-flex align-items-center">
-        <div class="dropdown custom-user-dropdown">
-          <a href="#" class="btn btn-danger btn-sm d-inline-flex justify-content-center align-items-center user dropdown-toggle" 
-             id="userMenu" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
-            <svg xmlns="http://www.w3.org/2000/svg" width="26px" height="30px" viewBox="0 0 448 512">
-              <path fill="rgb(255, 255, 255)" d="M224 248a120 120 0 1 0 0-240 120 120 0 1 0 0 240zm-29.7 56C95.8 304 16 383.8 16 482.3 16 498.7 29.3 512 45.7 512l356.6 0c16.4 0 29.7-13.3 29.7-29.7 0-98.5-79.8-178.3-178.3-178.3l-59.4 0z"/>
-            </svg>
-          </a>
-          <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userMenu">
-            <?php if (isset($_SESSION['user_id'])): ?>
-              <li><h6 class="dropdown-header text-dark">Chào, <?= $_SESSION['username'] ?></h6></li>
-              <li><a class="dropdown-item" href="profile.php">Thông tin tài khoản</a></li>
-              <li><a class="dropdown-item" href="order_history.php">Lịch sử đơn hàng</a></li>
-              <?php if ($_SESSION['role'] == 'admin'): ?>
-                <li><a class="dropdown-item fw-bold text-primary" href="admin_dashboard.php">Trang Quản Trị</a></li>
-              <?php endif; ?>
-              <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item text-danger" href="logout.php">Đăng xuất</a></li>
-            <?php else: ?>
-              <li><a class="dropdown-item" href="login.php">Đăng nhập</a></li>
-              <li><a class="dropdown-item" href="register.php">Đăng ký</a></li>
-            <?php endif; ?>
-          </ul>
-        </div>
-
-        <a href="view_cart.php" class="btn btn-danger btn-sm d-inline-flex justify-content-center align-items-center shopping-cart ms-2">
-          <svg xmlns="http://www.w3.org/2000/svg" width="30px" height="26px" viewBox="0 0 640 512">
-            <path fill="rgb(255, 255, 255)" d="M24-16C10.7-16 0-5.3 0 8S10.7 32 24 32l45.3 0c3.9 0 7.2 2.8 7.9 6.6l52.1 286.3c6.2 34.2 36 59.1 70.8 59.1L456 384c13.3 0 24-10.7 24-24s-10.7-24-24-24l-255.9 0c-11.6 0-21.5-8.3-23.6-19.7l-5.1-28.3 303.6 0c30.8 0 57.2-21.9 62.9-52.2L568.9 69.9C572.6 50.2 557.5 32 537.4 32l-412.7 0-.4-2c-4.8-26.6-28-46-55.1-46L24-16zM208 512a48 48 0 1 0 0-96 48 48 0 1 0 0 96zm224 0a48 48 0 1 0 0-96 48 48 0 1 0 0 96z"/>
-          </svg>
-          <span class="ms-1">Giỏ hàng</span>
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-light shadow-sm sticky-top">
+    <div class="container">
+        <a class="navbar-brand d-flex align-items-center" href="index.php">
+            <img src="image/logolaptop.jpg" width="40" height="40" class="rounded-circle me-2" alt="">
+            <span class="fw-bold">LAPTOP STORE</span>
         </a>
-      </div>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
+                <li class="nav-item"><a class="nav-link" href="index.php">Trang chủ</a></li>
+                <li class="nav-item"><a class="nav-link" href="news_list.php">Tin tức</a></li>
+            </ul>
+
+            <form class="d-flex mx-auto search-group w-100" style="max-width: 450px;" action="index.php" method="GET">
+                <input class="form-control" type="search" name="search" placeholder="Tìm kiếm laptop..." value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
+                <button class="btn px-4" type="submit">🔍</button>
+            </form>
+
+            <div class="ms-auto d-flex align-items-center mt-3 mt-lg-0">
+                <!-- User Menu -->
+                <div class="dropdown me-3">
+                    <a href="#" class="btn btn-dark btn-sm rounded-circle p-2" id="userMenu" data-bs-toggle="dropdown">
+                        <svg width="20" height="20" fill="white" viewBox="0 0 448 512"><path d="M224 256c70.7 0 128-57.3 128-128S294.7 0 224 0 96 57.3 96 128s57.3 128 128 128zm89.6 32h-16.7c-22.2 10.2-46.9 16-72.9 16s-50.6-5.8-72.9-16h-16.7C60.2 288 0 348.2 0 422.4V464c0 26.5 21.5 48 48 48h352c26.5 0 48-21.5 48-48v-41.6c0-74.2-60.2-134.4-134.4-134.4z"/></svg>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
+                        <?php if (isset($_SESSION['user_id'])): ?>
+                            <li><h6 class="dropdown-header">Hi, <?= $_SESSION['username'] ?></h6></li>
+                            <li><a class="dropdown-item" href="profile.php">Tài khoản</a></li>
+                            <?php if ($_SESSION['role'] == 'admin'): ?>
+                                <li><a class="dropdown-item text-primary fw-bold" href="admin_dashboard.php">Trang quản lý</a></li>
+                            <?php endif; ?>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="logout.php">Đăng xuất</a></li>
+                        <?php else: ?>
+                            <li><a class="dropdown-item" href="login.php">Đăng nhập</a></li>
+                            <li><a class="dropdown-item" href="register.php">Đăng ký</a></li>
+                        <?php endif; ?>
+                    </ul>
+                </div>
+
+                <!-- Giỏ hàng -->
+                <a href="view_cart.php" class="btn btn-dark btn-sm rounded-pill px-3 d-flex align-items-center">
+                    <svg width="18" height="18" fill="white" viewBox="0 0 576 512" class="me-2"><path d="M528.1 171.5L482 297.3c-11 30.2-39.6 50.7-71.7 50.7H203.1c-32.1 0-60.7-20.5-71.7-50.7L85.4 171.5c-4.1-11.3 4.3-23.5 16.4-23.5H411.6c12.1 0 20.5 12.2 16.4 23.5zM429.3 48H146.7c-12.1 0-20.5 12.2-16.4 23.5L176.4 128h223.2l46.1-56.5C449.8 60.2 441.4 48 429.3 48zM160 464a48 48 0 1 0 96 0 48 48 0 1 0 -96 0zm256 0a48 48 0 1 0 96 0 48 48 0 1 0 -96 0z"/></svg>
+                    <span>Giỏ hàng</span>
+                </a>
+            </div>
+        </div>
     </div>
-  </div>
 </nav>
 
 <div class="container py-5">

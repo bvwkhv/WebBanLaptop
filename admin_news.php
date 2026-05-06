@@ -81,6 +81,11 @@ $all_news = $db->select("SELECT * FROM news ORDER BY created_at DESC");
 </style>
 </head>
 <body>
+    <div class="container mt-3">
+    <a href="admin_dashboard.php" class="btn btn-outline-secondary rounded-pill shadow-sm">
+        <i class="fa-solid fa-arrow-left me-2"></i>Quay lại Dashboard
+    </a>
+    </div>
 <div class="container py-5">
     <h2 class="text-center fw-bold mb-5">QUẢN LÝ TIN TỨC</h2>
     
