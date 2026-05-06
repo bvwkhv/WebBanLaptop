@@ -3,10 +3,10 @@
     session_start();
     $db = new Database();
 
-    // Lấy số lượng cần hiển thị, mặc định là 9
+    // 1. Cấu hình hiển thị và Phân trang (Load more)
     $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 9;
 
-    // --- LOGIC LỌC DỮ LIỆU ---
+    // 2. Logic lọc dữ liệu
     $sql = "SELECT * FROM products WHERE 1=1";
     $params = [];
     $types = "";
@@ -33,7 +33,7 @@
         $types .= "s";
     }
 
-    $sql .= " LIMIT $limit";
+    $sql .= " ORDER BY product_id DESC LIMIT $limit";
 
     if (!empty($params)) {
         $result = $db->select($sql, $types, $params);
@@ -42,193 +42,194 @@
     }
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laptop Store - Thế giới Laptop</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles/styles.css">
-    <title>Document</title>
-    <style>
-        .sidebar-filter { background: #fff; padding: 20px; border-radius: 10px; border: 1px solid #eee; position: sticky; top: 20px; }
-        .filter-title { font-weight: bold; font-size: 1.1rem; margin-bottom: 20px; display: flex; align-items: center; }
-        .filter-group { margin-bottom: 20px; border-bottom: 1px solid #f0f0f0; padding-bottom: 15px; }
-        .filter-group label { font-weight: 600; margin-bottom: 10px; display: block; }
-        .product-price { color: #d70018; font-weight: bold; }
-    </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light border-bottom">
-  <div class="container">
-    <a class="navbar-brand home" href="index.php">Home</a>
-    <a class="navbar-brand home" href="news_list.php">Tin tức</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
-      <span class="navbar-toggler-icon"></span>
-    </button>
 
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0"></ul>
-
-      <form class="d-flex mx-auto mt-2 mt-lg-0" action="index.php" method="GET" style="width: 100%; max-width: 500px;">
-        <input class="form-control me-2" type="search" name="search" placeholder="Tìm kiếm nhanh..." value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
-        <button class="btn btn-success" type="submit">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" viewBox="0 0 512 512">
-            <path fill="currentColor" d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376C296.3 401.1 253.9 416 208 416 93.1 416 0 322.9 0 208S93.1 0 208 0 416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"/>
-          </svg>
-        </button>
-      </form>
-
-      <div class="ms-auto d-inline-flex align-items-center">
-        <div class="dropdown custom-user-dropdown">
-          <a href="#" class="btn btn-danger btn-sm d-inline-flex justify-content-center align-items-center user dropdown-toggle" 
-             id="userMenu" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
-            <svg xmlns="http://www.w3.org/2000/svg" width="26px" height="30px" viewBox="0 0 448 512">
-              <path fill="rgb(255, 255, 255)" d="M224 248a120 120 0 1 0 0-240 120 120 0 1 0 0 240zm-29.7 56C95.8 304 16 383.8 16 482.3 16 498.7 29.3 512 45.7 512l356.6 0c16.4 0 29.7-13.3 29.7-29.7 0-98.5-79.8-178.3-178.3-178.3l-59.4 0z"/>
-            </svg>
-          </a>
-          <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userMenu">
-            <?php if (isset($_SESSION['user_id'])): ?>
-              <li><h6 class="dropdown-header text-dark">Chào, <?= $_SESSION['username'] ?></h6></li>
-              <li><a class="dropdown-item" href="profile.php">Thông tin tài khoản</a></li>
-              <li><a class="dropdown-item" href="order_history.php">Lịch sử đơn hàng</a></li>
-              <?php if ($_SESSION['role'] == 'admin'): ?>
-                <li><a class="dropdown-item fw-bold text-primary" href="admin_dashboard.php">Trang Quản Trị</a></li>
-              <?php endif; ?>
-              <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item text-danger" href="logout.php">Đăng xuất</a></li>
-            <?php else: ?>
-              <li><a class="dropdown-item" href="login.php">Đăng nhập</a></li>
-              <li><a class="dropdown-item" href="register.php">Đăng ký</a></li>
-            <?php endif; ?>
-          </ul>
-        </div>
-
-        <a href="view_cart.php" class="btn btn-danger btn-sm d-inline-flex justify-content-center align-items-center shopping-cart ms-2">
-          <svg xmlns="http://www.w3.org/2000/svg" width="30px" height="26px" viewBox="0 0 640 512">
-            <path fill="rgb(255, 255, 255)" d="M24-16C10.7-16 0-5.3 0 8S10.7 32 24 32l45.3 0c3.9 0 7.2 2.8 7.9 6.6l52.1 286.3c6.2 34.2 36 59.1 70.8 59.1L456 384c13.3 0 24-10.7 24-24s-10.7-24-24-24l-255.9 0c-11.6 0-21.5-8.3-23.6-19.7l-5.1-28.3 303.6 0c30.8 0 57.2-21.9 62.9-52.2L568.9 69.9C572.6 50.2 557.5 32 537.4 32l-412.7 0-.4-2c-4.8-26.6-28-46-55.1-46L24-16zM208 512a48 48 0 1 0 0-96 48 48 0 1 0 0 96zm224 0a48 48 0 1 0 0-96 48 48 0 1 0 0 96z"/>
-          </svg>
-          <span class="ms-1">Giỏ hàng</span>
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-light shadow-sm sticky-top">
+    <div class="container">
+        <a class="navbar-brand d-flex align-items-center" href="index.php">
+            <img src="image/logolaptop.jpg" width="40" height="40" class="rounded-circle me-2" alt="">
+            <span class="fw-bold">LAPTOP STORE</span>
         </a>
-      </div>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
+                <li class="nav-item"><a class="nav-link" href="index.php">Trang chủ</a></li>
+                <li class="nav-item"><a class="nav-link" href="news_list.php">Tin tức</a></li>
+            </ul>
+
+            <form class="d-flex mx-auto search-group w-100" style="max-width: 450px;" action="index.php" method="GET">
+                <input class="form-control" type="search" name="search" placeholder="Tìm kiếm laptop..." value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
+                <button class="btn px-4" type="submit">🔍</button>
+            </form>
+
+            <div class="ms-auto d-flex align-items-center mt-3 mt-lg-0">
+                <!-- User Menu -->
+                <div class="dropdown me-3">
+                    <a href="#" class="btn btn-dark btn-sm rounded-circle p-2" id="userMenu" data-bs-toggle="dropdown">
+                        <svg width="20" height="20" fill="white" viewBox="0 0 448 512"><path d="M224 256c70.7 0 128-57.3 128-128S294.7 0 224 0 96 57.3 96 128s57.3 128 128 128zm89.6 32h-16.7c-22.2 10.2-46.9 16-72.9 16s-50.6-5.8-72.9-16h-16.7C60.2 288 0 348.2 0 422.4V464c0 26.5 21.5 48 48 48h352c26.5 0 48-21.5 48-48v-41.6c0-74.2-60.2-134.4-134.4-134.4z"/></svg>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
+                        <?php if (isset($_SESSION['user_id'])): ?>
+                            <li><h6 class="dropdown-header">Hi, <?= $_SESSION['username'] ?></h6></li>
+                            <li><a class="dropdown-item" href="profile.php">Tài khoản</a></li>
+                            <?php if ($_SESSION['role'] == 'admin'): ?>
+                                <li><a class="dropdown-item text-primary fw-bold" href="admin_dashboard.php">Trang quản lý</a></li>
+                            <?php endif; ?>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="logout.php">Đăng xuất</a></li>
+                        <?php else: ?>
+                            <li><a class="dropdown-item" href="login.php">Đăng nhập</a></li>
+                            <li><a class="dropdown-item" href="register.php">Đăng ký</a></li>
+                        <?php endif; ?>
+                    </ul>
+                </div>
+
+                <!-- Giỏ hàng -->
+                <a href="view_cart.php" class="btn btn-dark btn-sm rounded-pill px-3 d-flex align-items-center">
+                    <svg width="18" height="18" fill="white" viewBox="0 0 576 512" class="me-2"><path d="M528.1 171.5L482 297.3c-11 30.2-39.6 50.7-71.7 50.7H203.1c-32.1 0-60.7-20.5-71.7-50.7L85.4 171.5c-4.1-11.3 4.3-23.5 16.4-23.5H411.6c12.1 0 20.5 12.2 16.4 23.5zM429.3 48H146.7c-12.1 0-20.5 12.2-16.4 23.5L176.4 128h223.2l46.1-56.5C449.8 60.2 441.4 48 429.3 48zM160 464a48 48 0 1 0 96 0 48 48 0 1 0 -96 0zm256 0a48 48 0 1 0 96 0 48 48 0 1 0 -96 0z"/></svg>
+                    <span>Giỏ hàng</span>
+                </a>
+            </div>
+        </div>
     </div>
-  </div>
 </nav>
 
-    <header class="container py-5">
-      <div class="container text-center py-4 gllery">
-            <img id="main-img" class="img-fluid rounded shadow fist-image" src="./image/Hinh_galler_1.webp" alt="Sản phẩm chính">
-      </div>
-    </header>
-
-    <div class="container px-4 px-lg-5 mt-5">
-        <div class="row">
-            <aside class="col-lg-3">
-                <div class="sidebar-filter shadow-sm">
-                    <div class="filter-title">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-funnel me-2" viewBox="0 0 16 16">
-                            <path d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.128.334L10 8.692V13.5a.5.5 0 0 1-.342.474l-3 1A.5.5 0 0 1 6 14.5V8.692L1.628 3.834A.5.5 0 0 1 1.5 3.5v-2z"/>
-                        </svg> Bộ lọc tìm kiếm
-                    </div>
-                    <form method="GET" action="index.php">
-                        <div class="filter-group">
-                            <label>Hãng sản xuất:</label>
-                            <div class="form-check mb-1">
-                                <input class="form-check-input" type="radio" name="brand" id="brandAll" value="" <?= empty($_GET['brand']) ? 'checked' : '' ?> onchange="this.form.submit()">
-                                <label class="form-check-label" for="brandAll">Tất cả hãng</label>
-                            </div>
-                            <?php
-                            $brands = $db->select("SELECT * FROM brands");
-                            foreach($brands as $b): ?>
-                                <div class="form-check mb-1">
-                                    <input class="form-check-input" type="radio" name="brand" id="brand<?= $b['brand_id'] ?>" value="<?= $b['brand_id'] ?>" <?= (@$_GET['brand'] == $b['brand_id']) ? 'checked' : '' ?> onchange="this.form.submit()">
-                                    <label class="form-check-label" for="brand<?= $b['brand_id'] ?>"><?= $b['brand_name'] ?></label>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
-
-                        <div class="filter-group">
-                            <label>Mức giá:</label>
-                            <select name="price_range" class="form-select form-select-sm" onchange="this.form.submit()">
-                                <option value="">Tất cả giá</option>
-                                <option value="0-10" <?= (@$_GET['price_range']=='0-10')?'selected':'' ?>>Dưới 10 triệu</option>
-                                <option value="10-20" <?= (@$_GET['price_range']=='10-20')?'selected':'' ?>>10 - 20 triệu</option>
-                                <option value="20-30" <?= (@$_GET['price_range']=='20-30')?'selected':'' ?>>20 - 30 triệu</option>
-                                <option value="30-1000" <?= (@$_GET['price_range']=='30-1000')?'selected':'' ?>>Trên 30 triệu</option>
-                            </select>
-                        </div>
-                        <a href="index.php" class="btn btn-sm btn-link text-muted p-0 text-decoration-none small">Xóa bộ lọc</a>
-                    </form>
-                </div>
-            </aside>
-
-            <main class="col-lg-9">
-                <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 justify-content-center">
-                    <?php if(empty($result)) echo "<h5>Không có sản phẩm nào phù hợp.</h5>"; ?>
-                    <?php foreach($result as $r){?>
-                    <div class="col mb-5">
-                        <div class="card h-100 border-0 shadow-sm">
-                            <img class="card-img-top" src="image/<?= $r["image_url"]?>" alt="..." />
-                            <div class="card-body p-4">
-                                <div class="text-center">
-                                    <h6 class="fw-bolder"><?= $r["product_name"]?></h6>
-                                    <span class="product-price"><?= number_format($r["price"],0,',','.')?>đ</span>
-                                </div>
-                            </div>
-                            <div class="card-footer p-4 pt-0 border-top-0 bg-transparent text-center">
-                                <a class="btn btn-outline-dark btn-sm mt-auto rounded-pill px-4" href="product_details.php?id=<?= $r["product_id"]?>">Chi tiết</a>
-                            </div>
-                        </div>
-                    </div>
-                    <?php }?>
-                </div>
-            </main>
+<!-- Banner Slider -->
+<header class="container gallery-container">
+    <div class="row justify-content-center">
+        <div class="col-lg-11">
+            <img id="main-img" src="./image/Hinh_galler_1.webp" alt="Khuyến mãi">
         </div>
     </div>
+</header>
 
-    <div style="text-align: center; margin: 40px 0;">
-    <button onclick="loadMore()" style="padding: 10px 30px; border-radius: 25px; border: 1px solid #ccc; background: white; cursor: pointer;">
-        Xem thêm kết quả 
-    </button>
+<div class="container mt-5 pb-5">
+    <div class="row">
+        <!-- Sidebar Filter -->
+        <aside class="col-lg-3 mb-4">
+            <div class="sidebar-filter">
+                <div class="filter-title d-flex align-items-center">
+                    <span class="me-2">⚡</span> BỘ LỌC TÌM KIẾM
+                </div>
+                <form method="GET" action="index.php">
+                    <div class="filter-group">
+                        <label>Thương hiệu</label>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="brand" id="bAll" value="" <?= empty($_GET['brand']) ? 'checked' : '' ?> onchange="this.form.submit()">
+                            <label class="form-check-label" for="bAll">Tất cả hãng</label>
+                        </div>
+                        <?php
+                        $brands = $db->select("SELECT * FROM brands");
+                        foreach($brands as $b): ?>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="brand" id="b<?= $b['brand_id'] ?>" value="<?= $b['brand_id'] ?>" <?= (@$_GET['brand'] == $b['brand_id']) ? 'checked' : '' ?> onchange="this.form.submit()">
+                                <label class="form-check-label" for="b<?= $b['brand_id'] ?>"><?= $b['brand_name'] ?></label>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+
+                    <div class="filter-group mt-4">
+                        <label>Mức giá dự kiến</label>
+                        <select name="price_range" class="form-select" onchange="this.form.submit()">
+                            <option value="">Chọn khoảng giá</option>
+                            <option value="0-10" <?= (@$_GET['price_range']=='0-10')?'selected':'' ?>>Dưới 10 triệu</option>
+                            <option value="10-20" <?= (@$_GET['price_range']=='10-20')?'selected':'' ?>>10 - 20 triệu</option>
+                            <option value="20-30" <?= (@$_GET['price_range']=='20-30')?'selected':'' ?>>20 - 30 triệu</option>
+                            <option value="30-1000" <?= (@$_GET['price_range']=='30-1000')?'selected':'' ?>>Trên 30 triệu</option>
+                        </select>
+                    </div>
+                    <a href="index.php" class="btn btn-sm text-muted mt-3 d-block text-center fw-bold">Xóa tất cả bộ lọc</a>
+                </form>
+            </div>
+        </aside>
+
+        <!-- Product List -->
+        <main class="col-lg-9">
+            <div class="row g-4">
+                <?php if(empty($result)): ?>
+                    <div class="col-12 text-center py-5">
+                        <img src="https://cdn-icons-png.flaticon.com/512/7486/7486744.png" width="80" class="opacity-25 mb-3">
+                        <h5 class="text-muted">Không tìm thấy sản phẩm nào phù hợp.</h5>
+                    </div>
+                <?php else: ?>
+                    <?php foreach($result as $r): ?>
+                    <div class="col-6 col-md-4">
+                        <div class="card h-100 product-card shadow-sm">
+                            <img class="card-img-top" src="image/<?= $r["image_url"] ?>" alt="Laptop">
+                            <div class="card-body p-3">
+                                <h6 class="product-name"><?= htmlspecialchars($r["product_name"]) ?></h6>
+                                <p class="product-price mb-0"><?= number_format($r["price"],0,',','.') ?>đ</p>
+                            </div>
+                            <div class="card-footer bg-transparent border-0 p-3 pt-0">
+                                <a class="btn btn-detail w-100 py-2" href="product_details.php?id=<?= $r["product_id"] ?>">Chi tiết</a>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
+
+            <!-- Nút xem thêm -->
+            <?php if(!empty($result)): ?>
+            <div class="text-center mt-5">
+                <button onclick="loadMore()" class="btn btn-loadmore shadow-sm">Xem thêm sản phẩm</button>
+            </div>
+            <?php endif; ?>
+        </main>
     </div>
+</div>
 
-    <footer class="text-bg-dark py-5">
-      <div class="container text-center">
+<footer class="bg-dark text-white py-5">
+    <div class="container text-center">
         <p>© 2026 - Đồ án Chuyên ngành Công nghệ thông tin</p>
         <p>Dữ liệu sản phẩm được tổng hợp từ FPT-Shop và FIT-TDC 2019</p>
-      </div>
-    </footer>
+    </div>
+</footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        const images = ["./image/Hinh_galler_2.webp", "./image/Hinh_galler_3.webp", "./image/Hinh_galler_4.webp", "./image/Hinh_galler_5.webp"];
-        let currentIndex = 0;
-        const mainImg = document.getElementById("main-img");
-        setInterval(() => {
-            currentIndex = (currentIndex + 1) % images.length;
-            if(mainImg) mainImg.src = images[currentIndex];
-        }, 3000);
-    </script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Slider ảnh
+    const images = ["./image/Hinh_galler_1.webp", "./image/Hinh_galler_2.webp", "./image/Hinh_galler_3.webp", "./image/Hinh_galler_4.webp"];
+    let idx = 0;
+    setInterval(() => {
+        idx = (idx + 1) % images.length;
+        const el = document.getElementById("main-img");
+        if(el) {
+            el.style.opacity = '0';
+            setTimeout(() => {
+                el.src = images[idx];
+                el.style.opacity = '1';
+            }, 500);
+        }
+    }, 4000);
 
-    <script>
-// 1. Khi trang vừa tải xong, kiểm tra xem có vị trí cũ không
-window.onload = function() {
-    let scrollPos = sessionStorage.getItem('scrollPos');
-    if (scrollPos) {
-        window.scrollTo(0, scrollPos);
-        sessionStorage.removeItem('scrollPos'); // Xóa đi sau khi đã cuộn xong
+    // Load more giữ vị trí cuộn
+    window.onload = function() {
+        let pos = sessionStorage.getItem('scrollPos');
+        if (pos) window.scrollTo(0, pos);
+        sessionStorage.removeItem('scrollPos');
+    };
+
+    function loadMore() {
+        sessionStorage.setItem('scrollPos', window.scrollY);
+        let url = new URL(window.location.href);
+        let cur = parseInt(url.searchParams.get("limit")) || 9;
+        url.searchParams.set("limit", cur + 9);
+        window.location.href = url.href;
     }
-};
-
-function loadMore() {
-    // 2. Lưu lại vị trí cuộn hiện tại của bạn
-    sessionStorage.setItem('scrollPos', window.scrollY);
-
-    // 3. Thực hiện chuyển trang như cũ
-    let url = new URL(window.location.href);
-    let currentLimit = parseInt(url.searchParams.get("limit")) || 9;
-    url.searchParams.set("limit", currentLimit + 9);
-    window.location.href = url.href;
-}
 </script>
 </body>
 </html>

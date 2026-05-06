@@ -82,8 +82,13 @@ $items = $db->select($sql_items, 'i', [$order_id]);
             </table>
             
             <div class="mt-4">
-                <a href="order_history.php" class="btn btn-outline-secondary">Quay lại</a>
-            </div>
+    <?php 
+        $back_link = (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') 
+                     ? "admin_dashboard.php?tab=orders" 
+                     : "order_history.php";
+    ?>
+    <a href="<?= $back_link ?>" class="btn btn-outline-secondary">Quay lại</a>
+</div>
         </div>
     </div>
 </div>

@@ -6,171 +6,249 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     exit();
 }
 $db = new database();
-// 1. Cấu hình phân trang
+
 $limit = 5;
-$current_page = isset($_GET['page']) ? $_GET['page'] : 1;
+$current_page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $offset = ($current_page - 1) * $limit;
 
-// 2. Lấy tổng số sản phẩm để tính số trang
 $total_rows = $db->count("SELECT COUNT(*) FROM products");
 $total_pages = ceil($total_rows / $limit);
 
-// 3. Lấy dữ liệu sản phẩm cho trang hiện tại
 $sql = "SELECT * FROM products LIMIT ? OFFSET ?";
 $products = $db->select($sql, 'ii', [$limit, $offset]);
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Laptop Store</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="styles/styles.css">
-    <title>Document</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Thêm Font Awesome để có icon đẹp -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --admin-primary: #4e73df;
+            --admin-dark: #222e3c;
+            --bg-light: #f4f7f6;
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-light);
+        }
+
+        /* Navbar & Sidebar */
+        .navbar { background: white !important; border-bottom: 1px solid #e3e6f0 !important; }
+        
+        .sidebar-link {
+            border-radius: 8px;
+            margin-bottom: 5px;
+            transition: all 0.3s;
+            border: none !important;
+            padding: 12px 20px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .sidebar-link:hover {
+            background-color: #eaecf4;
+            color: var(--admin-primary);
+        }
+
+        .sidebar-link.active {
+            background-color: var(--admin-primary) !important;
+            color: white !important;
+            box-shadow: 0 4px 12px rgba(78, 115, 223, 0.2);
+        }
+
+        /* Table Design */
+        .card { border: none; border-radius: 12px; }
+        .table thead th {
+            background-color: #f8f9fc;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            color: #4e73df;
+            border-top: none;
+        }
+
+        .product-img {
+            width: 60px;
+            height: 45px;
+            object-fit: contain;
+            background: white;
+            padding: 2px;
+            border: 1px solid #eee;
+            border-radius: 6px;
+        }
+
+        .product-name-truncate {
+            max-width: 350px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-weight: 500;
+        }
+
+        /* Buttons */
+        .btn-action {
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            margin-right: 5px;
+        }
+
+        /* Pagination */
+        .pagination .page-link {
+            border: none;
+            margin: 0 3px;
+            border-radius: 6px;
+            color: #555;
+        }
+
+        .pagination .page-item.active .page-link {
+            background-color: var(--admin-primary);
+            box-shadow: 0 4px 10px rgba(78, 115, 223, 0.2);
+        }
+
+        footer { background-color: var(--admin-dark) !important; color: #adb5bd; }
+    </style>
 </head>
 <body class="d-flex flex-column min-vh-100">
-    <div class="flex-grow-1">
 
-    
-    <nav class="navbar navbar-expand-lg navbar-light border-bottom">
-  <div class="container">
-    <a class="navbar-brand home" href="index.php">Home</a>
-    
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0"></ul>
-
-      <form class="d-flex mx-auto mt-2 mt-lg-0" action="index.php" method="GET" style="width: 100%; max-width: 500px;">
-        <input class="form-control me-2" type="search" name="search" placeholder="Tìm kiếm nhanh..." value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
-        <button class="btn btn-success" type="submit">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" viewBox="0 0 512 512">
-            <path fill="currentColor" d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376C296.3 401.1 253.9 416 208 416 93.1 416 0 322.9 0 208S93.1 0 208 0 416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"/>
-          </svg>
-        </button>
-      </form>
-
-      <div class="ms-auto d-inline-flex align-items-center">
-        <div class="dropdown custom-user-dropdown">
-          <a href="#" class="btn btn-danger btn-sm d-inline-flex justify-content-center align-items-center user dropdown-toggle" 
-             id="userMenu" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
-            <svg xmlns="http://www.w3.org/2000/svg" width="26px" height="30px" viewBox="0 0 448 512">
-              <path fill="rgb(255, 255, 255)" d="M224 248a120 120 0 1 0 0-240 120 120 0 1 0 0 240zm-29.7 56C95.8 304 16 383.8 16 482.3 16 498.7 29.3 512 45.7 512l356.6 0c16.4 0 29.7-13.3 29.7-29.7 0-98.5-79.8-178.3-178.3-178.3l-59.4 0z"/>
-            </svg>
-          </a>
-          <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userMenu">
-            <?php if (isset($_SESSION['user_id'])): ?>
-              <li><h6 class="dropdown-header text-dark">Chào, <?= $_SESSION['username'] ?></h6></li>
-              <li><a class="dropdown-item" href="profile.php">Thông tin tài khoản</a></li>
-              <li><a class="dropdown-item" href="order_history.php">Lịch sử đơn hàng</a></li>
-              <?php if ($_SESSION['role'] == 'admin'): ?>
-                <li><a class="dropdown-item fw-bold text-primary" href="admin_dashboard.php">Trang Quản Trị</a></li>
-              <?php endif; ?>
-              <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item text-danger" href="logout.php">Đăng xuất</a></li>
-            <?php else: ?>
-              <li><a class="dropdown-item" href="login.php">Đăng nhập</a></li>
-              <li><a class="dropdown-item" href="register.php">Đăng ký</a></li>
-            <?php endif; ?>
-          </ul>
-        </div>
-
-        <a href="view_cart.php" class="btn btn-danger btn-sm d-inline-flex justify-content-center align-items-center shopping-cart ms-2">
-          <svg xmlns="http://www.w3.org/2000/svg" width="30px" height="26px" viewBox="0 0 640 512">
-            <path fill="rgb(255, 255, 255)" d="M24-16C10.7-16 0-5.3 0 8S10.7 32 24 32l45.3 0c3.9 0 7.2 2.8 7.9 6.6l52.1 286.3c6.2 34.2 36 59.1 70.8 59.1L456 384c13.3 0 24-10.7 24-24s-10.7-24-24-24l-255.9 0c-11.6 0-21.5-8.3-23.6-19.7l-5.1-28.3 303.6 0c30.8 0 57.2-21.9 62.9-52.2L568.9 69.9C572.6 50.2 557.5 32 537.4 32l-412.7 0-.4-2c-4.8-26.6-28-46-55.1-46L24-16zM208 512a48 48 0 1 0 0-96 48 48 0 1 0 0 96zm224 0a48 48 0 1 0 0-96 48 48 0 1 0 0 96z"/>
-          </svg>
-          <span class="ms-1">Giỏ hàng</span>
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg sticky-top shadow-sm">
+    <div class="container">
+        <a class="navbar-brand fw-bold text-primary" href="index.php">
+            <i class="fa-solid fa-laptop-code me-2"></i>LAPTOP ADMIN
         </a>
-      </div>
+        
+        <div class="ms-auto d-flex align-items-center">
+            <div class="dropdown">
+                <a href="#" class="nav-link dropdown-toggle d-flex align-items-center" id="userMenu" data-bs-toggle="dropdown">
+                    <img src="https://ui-avatars.com/api/?name=Admin&background=4e73df&color=fff" class="rounded-circle me-2" width="30">
+                    <span class="d-none d-md-inline"><?= $_SESSION['username'] ?></span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-3">
+                    <li><a class="dropdown-item" href="profile.php"><i class="fa-regular fa-user me-2"></i>Hồ sơ</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item text-danger" href="logout.php"><i class="fa-solid fa-sign-out me-2"></i>Đăng xuất</a></li>
+                </ul>
+            </div>
+        </div>
     </div>
-  </div>
 </nav>
 
-    <div class="container-fluid mt-4">
+<div class="container mt-4 flex-grow-1">
     <div class="row">
-        <div class="col-md-2">
-            <div class="list-group shadow-sm">
-                <a href="admin_dashboard.php" class="list-group-item list-group-item-action active" style="background-color: #FF8C00; border-color: #FF8C00;">
-                    Quản lý sản phẩm
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 mb-4">
+            <div class="list-group shadow-sm border-0">
+                <a href="admin_dashboard.php" class="list-group-item sidebar-link active">
+                    <i class="fa-solid fa-box me-2"></i> Sản phẩm
                 </a>
-                <a href="admin_orders.php" class="list-group-item list-group-item-action">Quản lý đơn hàng</a>
-                <a href="admin_statistics.php" class="list-group-item list-group-item-action">Thống kê</a>
-                <a href="admin_tracking.php" class="list-group-item list-group-item-action">Thống kê hành vi</a>
-                <a href="admin_news.php" class="list-group-item list-group-item-action">Quản lý tin tức</a>
+                <a href="admin_orders.php" class="list-group-item sidebar-link">
+                    <i class="fa-solid fa-cart-shopping me-2"></i> Đơn hàng
+                </a>
+                <a href="admin_statistics.php" class="list-group-item sidebar-link">
+                    <i class="fa-solid fa-chart-line me-2"></i> Thống kê
+                </a>
+                <a href="admin_news.php" class="list-group-item sidebar-link">
+                    <i class="fa-regular fa-newspaper me-2"></i> Tin tức
+                </a>
+                <a href="admin_tracking.php" class="list-group-item sidebar-link">
+                    <i class="fa-solid fa-eye" style="color: rgb(151, 151, 151);"></i> Theo dõi sự kiện
+                </a>
             </div>
         </div>
 
-        <div class="col-md-10">
-            <div class="card shadow-sm">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Danh sách sản phẩm Laptop</h5>
-                    <a href="add_product.php" class="btn btn-success btn-sm">+ Thêm sản phẩm</a>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Hình ảnh</th>
-                                    <th>Tên Laptop</th>
-                                    <th>Giá bán</th>
-                                    <!-- <th>Số lượng</th> -->
-                                    <th>Thao tác</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach($products as $p){?>
-                                <tr>
-                                    <td><?= $p['product_id']?></td>
-                                    <td><img src="image/<?= $p['image_url'] ?>" width="50"></td>
-                                    <td class="text-start">
-                                        <div class="product-name-truncate" title="<?= $p['product_name'] ?>">
-                                            <?= $p['product_name'] ?>
-                                        </div>
-                                    </td>
-                                    <td><?= number_format($p['price'], 0, ',', '.') ?>đ</td>
-                                    <!-- <td>10</td> -->
-                                    <td>
-                                        <a href="edit_product.php?id=<?= $p['product_id']?>" class="btn btn-warning btn-sm">Sửa</a>
-                                        <a href="delete_product.php?id=<?= $p['product_id']?>" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có muốn xóa không?')">Xóa</a>
-                                    </td>
-                                </tr>
-                                <?php }?>
-                            </tbody>
-                        </table>
-                        <div class="pagination" style="margin-top: 20px; text-align: center;">
-        <?php if ($current_page > 1): ?>
-            <a href="?page=<?= $current_page - 1 ?>">Trước</a>
-        <?php endif; ?>
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-bold mb-0 text-dark">Quản lý sản phẩm</h4>
+                <a href="add_product.php" class="btn btn-primary shadow-sm rounded-pill px-4">
+                    <i class="fa-solid fa-plus me-2"></i>Thêm Laptop mới
+                </a>
+            </div>
 
-        <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-            <a href="?page=<?= $i ?>" style="<?= ($i == $current_page) ? 'font-weight:bold; color:red;' : '' ?>">
-                <?= $i ?>
-            </a>
-        <?php endfor; ?>
-
-        <?php if ($current_page < $total_pages): ?>
-            <a href="?page=<?= $current_page + 1 ?>">Sau</a>
-        <?php endif; ?>
-    </div>
-                    </div>
+            <div class="card shadow-sm p-3">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th class="text-center">ID</th>
+                                <th>Sản phẩm</th>
+                                <th>Tên Laptop</th>
+                                <th>Giá bán</th>
+                                <th class="text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach($products as $p): ?>
+                            <tr>
+                                <td class="text-center fw-bold text-muted"><?= $p['product_id']?></td>
+                                <td>
+                                    <img src="image/<?= $p['image_url'] ?>" class="product-img" alt="laptop">
+                                </td>
+                                <td>
+                                    <div class="product-name-truncate" title="<?= htmlspecialchars($p['product_name']) ?>">
+                                        <?= htmlspecialchars($p['product_name']) ?>
+                                    </div>
+                                    <small class="text-muted">Laptop Gaming / Office</small>
+                                </td>
+                                <td class="fw-bold text-danger">
+                                    <?= number_format($p['price'], 0, ',', '.') ?>đ
+                                </td>
+                                <td class="text-center">
+                                    <a href="edit_product.php?id=<?= $p['product_id']?>" class="btn btn-warning btn-action text-white" title="Sửa">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </a>
+                                    <a href="delete_product.php?id=<?= $p['product_id']?>" class="btn btn-danger btn-action" 
+                                       onclick="return confirm('Bạn chắc chắn muốn xóa sản phẩm này?')" title="Xóa">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
                 </div>
+
+                <!-- Pagination Bootstrap Style -->
+                <nav class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item <?= ($current_page <= 1) ? 'disabled' : '' ?>">
+                            <a class="page-link" href="?page=<?= $current_page - 1 ?>"><i class="fa-solid fa-chevron-left"></i></a>
+                        </li>
+
+                        <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+                            <li class="page-item <?= ($i == $current_page) ? 'active' : '' ?>">
+                                <a class="page-link" href="?page=<?= $i ?>"><?= $i ?></a>
+                            </li>
+                        <?php endfor; ?>
+
+                        <li class="page-item <?= ($current_page >= $total_pages) ? 'disabled' : '' ?>">
+                            <a class="page-link" href="?page=<?= $current_page + 1 ?>"><i class="fa-solid fa-chevron-right"></i></a>
+                        </li>
+                    </ul>
+                </nav>
             </div>
         </div>
     </div>
 </div>
-    </div>
-        <!-- Footer -->
-        <footer class="text-bg-dark py-5">
-        <div>
-            <p>© 2026 - Đồ án Chuyên ngành Công nghệ thông tin</p>
-            <p>Dữ liệu sản phẩm được tổng hợp từ FPT-Shop và FIT-TDC 2019</p>
-        </div>
-        </footer>
 
-    <!-- Nhúng js -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
-    
+<footer class="py-4 mt-5 text-center">
+    <div class="container text-center">
+        <p class="mb-1 small">© 2026 - Đồ án Chuyên ngành Công nghệ thông tin</p>
+        <p class="mb-0 x-small opacity-50">Dữ liệu sản phẩm được tổng hợp từ FPT-Shop và FIT-TDC 2019</p>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
