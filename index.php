@@ -85,6 +85,7 @@
                         <?php if (isset($_SESSION['user_id'])): ?>
                             <li><h6 class="dropdown-header">Hi, <?= $_SESSION['username'] ?></h6></li>
                             <li><a class="dropdown-item" href="profile.php">Tài khoản</a></li>
+                            <li><a class="dropdown-item" href="order_history.php">Lịch sử đặt hàng</a></li>
                             <?php if ($_SESSION['role'] == 'admin'): ?>
                                 <li><a class="dropdown-item text-primary fw-bold" href="admin_dashboard.php">Trang quản lý</a></li>
                             <?php endif; ?>
