@@ -2,7 +2,7 @@
 require_once "database.php";
 session_start();
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
-    header("Location: login.php");
+    header("Location: index.php");
     exit();
 }
 $db = new database();
@@ -163,6 +163,9 @@ $products = $db->select($sql, 'ii', [$limit, $offset]);
                 </a>
                 <a href="admin_tracking.php" class="list-group-item sidebar-link">
                     <i class="fa-solid fa-eye" style="color: rgb(151, 151, 151);"></i> Theo dõi sự kiện
+                </a>
+                <a href="admin_promotions.php" class="list-group-item sidebar-link">
+                    <i class="fa-regular fa-newspaper me-2"></i> Khuyến mãi
                 </a>
             </div>
         </div>
