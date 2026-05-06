@@ -61,7 +61,7 @@
     <nav class="navbar navbar-expand-lg navbar-light border-bottom">
   <div class="container">
     <a class="navbar-brand home" href="index.php">Home</a>
-    
+    <a class="navbar-brand home" href="news_list.php">Tin tức</a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
       <span class="navbar-toggler-icon"></span>
     </button>

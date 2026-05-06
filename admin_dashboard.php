@@ -98,6 +98,7 @@ $products = $db->select($sql, 'ii', [$limit, $offset]);
                 <a href="admin_orders.php" class="list-group-item list-group-item-action">Quản lý đơn hàng</a>
                 <a href="admin_statistics.php" class="list-group-item list-group-item-action">Thống kê</a>
                 <a href="admin_tracking.php" class="list-group-item list-group-item-action">Thống kê hành vi</a>
+                <a href="admin_news.php" class="list-group-item list-group-item-action">Quản lý tin tức</a>
             </div>
         </div>
 
