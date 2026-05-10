@@ -8,34 +8,26 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
 require_once "database.php";
 $db = new Database();
 
-/**
- * Hàm hỗ trợ chuyển đổi tên hành động sang tiếng Việt để hiển thị trên bảng
- */
 function translateEvent($event) {
     $mapping = [
+        'add_to_cart'       => '🛒 Thêm vào giỏ hàng',
         'click_add_to_cart' => '🛒 Thêm vào giỏ hàng',
-        'view_spec'         => '🔍 Xem chi tiết cấu hình',
-        'scroll_to_reviews' => '📜 Xem đánh giá khách hàng',
-        
         'Nhấn nút Thêm giỏ hàng' => '🛒 Thêm vào giỏ hàng',
-        'Xem cấu hình'      => '🔍 Xem chi tiết cấu hình',
-        'Cuộn xem đánh giá' => '📜 Xem đánh giá khách hàng'
+        'view_spec'         => '🔍 Xem cấu hình',
+        'scroll_to_reviews' => '📜 Xem đánh giá'
     ];
     return $mapping[$event] ?? $event;
 }
 
-// 1. Thống kê tổng số lượng từng loại sự kiện
-$sql_summary = "SELECT event_type, COUNT(*) as total 
-                FROM event_tracking 
-                GROUP BY event_type 
-                ORDER BY total DESC";
+// 1. Thống kê tổng quan (Giữ nguyên)
+$sql_summary = "SELECT event_type, COUNT(*) as total FROM event_tracking GROUP BY event_type ORDER BY total DESC";
 $summary_data = $db->select($sql_summary);
 
-// 2. Thống kê Top 10 sản phẩm được quan tâm nhiều nhất (Click thêm giỏ)
-// Lưu ý: WHERE khớp với cả mã cũ và mã mới bạn đặt
+// 2. FIX QUAN TRỌNG: Thống kê Sản phẩm hot
+// Gom tất cả các kiểu tên liên quan đến "Thêm giỏ hàng" vào đây
 $sql_top_cart = "SELECT target_id, COUNT(*) as total 
                  FROM event_tracking 
-                 WHERE event_type = 'click_add_to_cart' OR event_type = 'Nhấn nút Thêm giỏ hàng'
+                 WHERE event_type IN ('click_add_to_cart', 'add_to_cart', 'Nhấn nút Thêm giỏ hàng')
                  GROUP BY target_id 
                  ORDER BY total DESC LIMIT 10";
 $top_cart = $db->select($sql_top_cart);
