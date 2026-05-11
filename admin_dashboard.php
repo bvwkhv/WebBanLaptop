@@ -167,6 +167,9 @@ $products = $db->select($sql, 'ii', [$limit, $offset]);
                 <a href="admin_promotions.php" class="list-group-item sidebar-link">
                     <i class="fa-regular fa-newspaper me-2"></i> Khuyến mãi
                 </a>
+                <a href="admin_chat.php" class="list-group-item sidebar-link">
+                    <i class="fa-regular fa-comments" style="color: rgb(151, 151, 151);"></i> Chat
+                </a>
             </div>
         </div>
 
