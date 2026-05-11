@@ -190,3 +190,26 @@ body {
     text-align: left;
     color: #6c757d;
 }
+
+@media (max-width: 768px) {
+    /* Ép menu phải hiển thị trên mọi thứ khác */
+    .dropdown-menu {
+        z-index: 9999 !important; 
+        position: fixed !important; /* Dùng fixed để nó căn theo màn hình điện thoại thay vì phần tử cha */
+        top: auto !important;
+        right: 10px !important; /* Cách mép phải màn hình 10px cho đẹp */
+        left: 10px !important; /* Cách mép trái 10px để menu to ra cho dễ bấm */
+        width: calc(100% - 20px) !important; /* Menu sẽ rộng gần hết màn hình */
+    }
+
+    /* Đưa các mục menu ra giữa cho dễ thao tác */
+    .dropdown-item {
+        text-align: center;
+        padding: 15px !important;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .dropdown-item:last-child {
+        border-bottom: none;
+    }
+}

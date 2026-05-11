@@ -155,28 +155,44 @@ if (!empty($params)) {
                 <div class="ms-auto d-flex align-items-center mt-3 mt-lg-0">
                     <!-- User Menu -->
                     <div class="dropdown me-3">
-                        <a href="#" class="btn btn-dark btn-sm rounded-circle p-2" id="userMenu" data-bs-toggle="dropdown">
-                            <svg width="20" height="20" fill="white" viewBox="0 0 448 512">
-                                <path d="M224 256c70.7 0 128-57.3 128-128S294.7 0 224 0 96 57.3 96 128s57.3 128 128 128zm89.6 32h-16.7c-22.2 10.2-46.9 16-72.9 16s-50.6-5.8-72.9-16h-16.7C60.2 288 0 348.2 0 422.4V464c0 26.5 21.5 48 48 48h352c26.5 0 48-21.5 48-48v-41.6c0-74.2-60.2-134.4-134.4-134.4z" />
+                        <a href="#" class="btn btn-dark btn-sm rounded-circle p-2 d-flex align-items-center justify-content-center"
+                            id="userMenu" data-bs-toggle="dropdown" aria-expanded="false" style="width: 38px; height: 38px;">
+                            <svg width="18" height="18" fill="white" viewBox="0 0 448 512">
+                                <path d="M224 256c70.7 0 128-57.3 128-128S294.7 0 224 0 96 57.3 96 128s57.3 128 128 128zm89.6 32h-16.7c-22.2 10.2-46.9 16-72.9 16s-50.6-5.8-72.9-16h-16.7C60.2 288 0 348.2 0 422.4V464c0 26.5 21.5 48 48 48h352c26.5 0 48-48v-41.6c0-74.2-60.2-134.4-134.4-134.4z" />
                             </svg>
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
+
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2 py-2" aria-labelledby="userMenu" style="min-width: 200px; border-radius: 12px;">
                             <?php if (isset($_SESSION['user_id'])): ?>
-                                <li>
-                                    <h6 class="dropdown-header">Hi, <?= $_SESSION['username'] ?></h6>
+                                <li class="px-3 py-2">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; font-size: 14px;">
+                                            <?= strtoupper(substr($_SESSION['username'], 0, 1)) ?>
+                                        </div>
+                                        <div class="overflow-hidden">
+                                            <p class="mb-0 fw-bold text-truncate" style="font-size: 14px; max-width: 130px;">Hi, <?= $_SESSION['username'] ?></p>
+                                            <small class="text-muted" style="font-size: 11px;">Khách hàng</small>
+                                        </div>
+                                    </div>
                                 </li>
-                                <li><a class="dropdown-item" href="profile.php">Tài khoản</a></li>
-                                <li><a class="dropdown-item" href="order_history.php">Lịch sử đặt hàng</a></li>
+                                <li>
+                                    <hr class="dropdown-divider mx-2">
+                                </li>
+                                <!-- <li><a class="dropdown-item py-2" href="profile.php"><i class="fa-solid fa-user-gear me-2 text-muted"></i> Tài khoản</a></li> -->
+                                <li><a class="dropdown-item py-2" href="order_history.php"><i class="fa-solid fa-clock-rotate-left me-2 text-muted"></i> Lịch sử đơn hàng</a></li>
+
                                 <?php if ($_SESSION['role'] == 'admin'): ?>
-                                    <li><a class="dropdown-item text-primary fw-bold" href="admin_dashboard.php">Trang quản lý</a></li>
+                                    <li><a class="dropdown-item py-2 text-primary fw-bold" href="admin_dashboard.php"><i class="fa-solid fa-gauge-high me-2"></i> Trang quản lý</a></li>
                                 <?php endif; ?>
+
                                 <li>
-                                    <hr class="dropdown-divider">
+                                    <hr class="dropdown-divider mx-2">
                                 </li>
-                                <li><a class="dropdown-item text-danger" href="logout.php">Đăng xuất</a></li>
+                                <li><a class="dropdown-item py-2 text-danger" href="logout.php"><i class="fa-solid fa-right-from-bracket me-2"></i> Đăng xuất</a></li>
+
                             <?php else: ?>
-                                <li><a class="dropdown-item" href="login.php">Đăng nhập</a></li>
-                                <li><a class="dropdown-item" href="register.php">Đăng ký</a></li>
+                                <li><a class="dropdown-item py-2" href="login.php"><i class="fa-solid fa-right-to-bracket me-2 text-muted"></i> Đăng nhập</a></li>
+                                <li><a class="dropdown-item py-2" href="register.php"><i class="fa-solid fa-user-plus me-2 text-muted"></i> Đăng ký</a></li>
                             <?php endif; ?>
                         </ul>
                     </div>
@@ -297,8 +313,8 @@ if (!empty($params)) {
                     <input type="file" id="image-input" accept="image/*" style="display: none;" onchange="previewImage()">
                     <button class="btn btn-light btn-sm" onclick="document.getElementById('image-input').click()">🖼️</button>
 
-                    <input type="text" id="user-msg" class="form-control" placeholder="Nhập tin nhắn..." 
-       onkeypress="if(event.key === 'Enter') sendMessage()">
+                    <input type="text" id="user-msg" class="form-control" placeholder="Nhập tin nhắn..."
+                        onkeypress="if(event.key === 'Enter') sendMessage()">
                     <button class="btn btn-primary btn-sm rounded-pill px-3" onclick="sendMessage()">Gửi</button>
                 </div>
                 <div id="file-preview" class="small text-primary mt-1" style="display:none; font-size: 11px;"></div>
