@@ -192,10 +192,16 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
                 </div>
                 <div id="msg-list" class="msg-list"></div>
                 <div class="p-3 bg-white border-top">
-                    <div class="input-group">
+                    <div class="input-group align-items-center">
+                        <input type="file" id="admin-image-input" accept="image/*" style="display: none;" onchange="previewAdminImage()">
+                        <button class="btn btn-light border-0" onclick="document.getElementById('admin-image-input').click()">
+                            <i class="fa-regular fa-image text-muted" style="font-size: 20px;"></i>
+                        </button>
+
                         <input type="text" id="admin-reply" class="form-control border-0 bg-light" placeholder="Nhập tin nhắn..." onkeypress="if(event.key === 'Enter') sendReply()">
-                        <button class="btn btn-primary px-4 ms-2" onclick="sendReply()"><i class="fa-solid fa-paper-plane"></i></button>
+                        <button class="btn btn-primary px-4 ms-2 rounded-pill" onclick="sendReply()"><i class="fa-solid fa-paper-plane"></i></button>
                     </div>
+                    <div id="admin-file-preview" class="small text-primary mt-1" style="display:none; font-size: 11px; margin-left: 45px;"></div>
                 </div>
             </div>
         </div>
@@ -242,54 +248,75 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
         }
 
         function loadMessages(forceScroll = false) {
-    if (!currentUserId) return;
+            if (!currentUserId) return;
 
-    const msgList = document.getElementById('msg-list');
-    
-    fetch(`get_messages.php?user_id=${currentUserId}`)
-        .then(res => res.text())
-        .then(data => {
-            // Tạo một khung tạm để so sánh nội dung
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = data;
-            const newMsgCount = tempDiv.querySelectorAll('.message-wrapper').length;
-            const currentMsgCount = msgList.querySelectorAll('.message-wrapper').length;
+            const msgList = document.getElementById('msg-list');
 
-            // Kiểm tra xem menu "Gỡ" có đang mở không
-            const isMenuOpen = Array.from(document.querySelectorAll('.action-menu')).some(el => el.style.display === 'block');
+            fetch(`get_messages.php?user_id=${currentUserId}`)
+                .then(res => res.text())
+                .then(data => {
+                    // Tạo một khung tạm để so sánh nội dung
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = data;
+                    const newMsgCount = tempDiv.querySelectorAll('.message-wrapper').length;
+                    const currentMsgCount = msgList.querySelectorAll('.message-wrapper').length;
 
-            // CHỈ CẬP NHẬT KHI: 
-            // 1. Số lượng tin nhắn thay đổi (có tin mới hoặc vừa gỡ tin)
-            // 2. Hoặc khi ép buộc cuộn (forceScroll)
-            // 3. VÀ quan trọng nhất: Không cập nhật khi đang mở menu (để tránh mất menu) 
-            //    TRỪ KHI có tin nhắn mới thực sự.
-            
-            if (newMsgCount !== currentMsgCount || forceScroll) {
-                if (isMenuOpen && newMsgCount === currentMsgCount) {
-                    // Nếu đang mở menu và số lượng tin không đổi thì kệ nó, không làm gì cả
-                    return;
-                }
-                
-                const isAtBottom = msgList.scrollHeight - msgList.scrollTop <= msgList.clientHeight + 100;
-                msgList.innerHTML = data;
-                if (isAtBottom || forceScroll) msgList.scrollTop = msgList.scrollHeight;
+                    // Kiểm tra xem menu "Gỡ" có đang mở không
+                    const isMenuOpen = Array.from(document.querySelectorAll('.action-menu')).some(el => el.style.display === 'block');
+
+                    // CHỈ CẬP NHẬT KHI: 
+                    // 1. Số lượng tin nhắn thay đổi (có tin mới hoặc vừa gỡ tin)
+                    // 2. Hoặc khi ép buộc cuộn (forceScroll)
+                    // 3. VÀ quan trọng nhất: Không cập nhật khi đang mở menu (để tránh mất menu) 
+                    //    TRỪ KHI có tin nhắn mới thực sự.
+
+                    if (newMsgCount !== currentMsgCount || forceScroll) {
+                        if (isMenuOpen && newMsgCount === currentMsgCount) {
+                            // Nếu đang mở menu và số lượng tin không đổi thì kệ nó, không làm gì cả
+                            return;
+                        }
+
+                        const isAtBottom = msgList.scrollHeight - msgList.scrollTop <= msgList.clientHeight + 100;
+                        msgList.innerHTML = data;
+                        if (isAtBottom || forceScroll) msgList.scrollTop = msgList.scrollHeight;
+                    }
+                });
+        }
+
+        function previewAdminImage() {
+            const file = document.getElementById('admin-image-input').files[0];
+            const preview = document.getElementById('admin-file-preview');
+            if (file) {
+                preview.innerText = "Sắp gửi: " + file.name;
+                preview.style.display = "block";
             }
-        });
-}
+        }
 
         function sendReply() {
             const input = document.getElementById('admin-reply');
+            const imageInput = document.getElementById('admin-image-input');
             const msg = input.value.trim();
-            if (!msg || !currentUserId) return;
+            const file = imageInput.files[0];
+
+            if ((!msg && !file) || !currentUserId) return;
+
             let formData = new FormData();
             formData.append('receiver_id', currentUserId);
             formData.append('message', msg);
-            fetch('admin_send_msg.php', {
+            if (file) {
+                formData.append('image', file);
+            }
+
+            fetch('admin_send_msg.php', { // Tuan kiểm tra đúng tên file xử lý nhé
                 method: 'POST',
                 body: formData
-            }).then(() => {
-                input.value = "";
-                loadMessages(true);
+            }).then(res => res.json()).then(data => {
+                if (data.status === 'success') {
+                    input.value = "";
+                    imageInput.value = "";
+                    document.getElementById('admin-file-preview').style.display = "none";
+                    loadMessages(true);
+                }
             });
         }
 
