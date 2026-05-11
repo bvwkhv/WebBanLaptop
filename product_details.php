@@ -169,59 +169,83 @@ $reviews = $db->select("SELECT r.*, u.username FROM reviews r JOIN users u ON r.
 <body>
 
     <!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-light shadow-sm sticky-top">
-    <div class="container">
-        <a class="navbar-brand d-flex align-items-center" href="index.php">
-            <img src="image/logolaptop.jpg" width="40" height="40" class="rounded-circle me-2" alt="">
-            <span class="fw-bold">LAPTOP STORE</span>
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+    <nav class="navbar navbar-expand-lg navbar-light shadow-sm sticky-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="index.php">
+                <img src="image/logolaptop.jpg" width="40" height="40" class="rounded-circle me-2" alt="">
+                <span class="fw-bold">LAPTOP STORE</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
 
-        <div class="collapse navbar-collapse" id="navContent">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
-                <li class="nav-item"><a class="nav-link" href="index.php">Trang chủ</a></li>
-                <li class="nav-item"><a class="nav-link" href="news_list.php">Tin tức</a></li>
-            </ul>
+            <div class="collapse navbar-collapse" id="navContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
+                    <li class="nav-item"><a class="nav-link" href="index.php">Trang chủ</a></li>
+                    <li class="nav-item"><a class="nav-link" href="news_list.php">Tin tức</a></li>
+                </ul>
 
-            <form class="d-flex mx-auto search-group w-100" style="max-width: 450px;" action="index.php" method="GET">
-                <input class="form-control" type="search" name="search" placeholder="Tìm kiếm laptop..." value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
-                <button class="btn px-4" type="submit">🔍</button>
-            </form>
+                <form class="d-flex mx-auto search-group w-100" style="max-width: 450px;" action="index.php" method="GET">
+                    <input class="form-control" type="search" name="search" placeholder="Tìm kiếm laptop..." value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
+                    <button class="btn px-4" type="submit">🔍</button>
+                </form>
 
-            <div class="ms-auto d-flex align-items-center mt-3 mt-lg-0">
-                <!-- User Menu -->
-                <div class="dropdown me-3">
-                    <a href="#" class="btn btn-dark btn-sm rounded-circle p-2" id="userMenu" data-bs-toggle="dropdown">
-                        <svg width="20" height="20" fill="white" viewBox="0 0 448 512"><path d="M224 256c70.7 0 128-57.3 128-128S294.7 0 224 0 96 57.3 96 128s57.3 128 128 128zm89.6 32h-16.7c-22.2 10.2-46.9 16-72.9 16s-50.6-5.8-72.9-16h-16.7C60.2 288 0 348.2 0 422.4V464c0 26.5 21.5 48 48 48h352c26.5 0 48-21.5 48-48v-41.6c0-74.2-60.2-134.4-134.4-134.4z"/></svg>
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
-                        <?php if (isset($_SESSION['user_id'])): ?>
-                            <li><h6 class="dropdown-header">Hi, <?= $_SESSION['username'] ?></h6></li>
-                            <li><a class="dropdown-item" href="profile.php">Tài khoản</a></li>
-                            <li><a class="dropdown-item" href="order_history.php">Lịch sử đặt hàng</a></li>
-                            <?php if ($_SESSION['role'] == 'admin'): ?>
-                                <li><a class="dropdown-item text-primary fw-bold" href="admin_dashboard.php">Trang quản lý</a></li>
+                <div class="ms-auto d-flex align-items-center mt-3 mt-lg-0">
+                    <!-- User Menu -->
+                    <div class="dropdown me-3">
+                        <a href="#" class="btn btn-dark btn-sm rounded-circle p-2 d-flex align-items-center justify-content-center"
+                            id="userMenu" data-bs-toggle="dropdown" aria-expanded="false" style="width: 38px; height: 38px;">
+                            <svg width="18" height="18" fill="white" viewBox="0 0 448 512">
+                                <path d="M224 256c70.7 0 128-57.3 128-128S294.7 0 224 0 96 57.3 96 128s57.3 128 128 128zm89.6 32h-16.7c-22.2 10.2-46.9 16-72.9 16s-50.6-5.8-72.9-16h-16.7C60.2 288 0 348.2 0 422.4V464c0 26.5 21.5 48 48 48h352c26.5 0 48-48v-41.6c0-74.2-60.2-134.4-134.4-134.4z" />
+                            </svg>
+                        </a>
+
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2 py-2" aria-labelledby="userMenu" style="min-width: 200px; border-radius: 12px;">
+                            <?php if (isset($_SESSION['user_id'])): ?>
+                                <li class="px-3 py-2">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; font-size: 14px;">
+                                            <?= strtoupper(substr($_SESSION['username'], 0, 1)) ?>
+                                        </div>
+                                        <div class="overflow-hidden">
+                                            <p class="mb-0 fw-bold text-truncate" style="font-size: 14px; max-width: 130px;">Hi, <?= $_SESSION['username'] ?></p>
+                                            <small class="text-muted" style="font-size: 11px;">Khách hàng</small>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li>
+                                    <hr class="dropdown-divider mx-2">
+                                </li>
+                                <!-- <li><a class="dropdown-item py-2" href="profile.php"><i class="fa-solid fa-user-gear me-2 text-muted"></i> Tài khoản</a></li> -->
+                                <li><a class="dropdown-item py-2" href="order_history.php"><i class="fa-solid fa-clock-rotate-left me-2 text-muted"></i> Lịch sử đơn hàng</a></li>
+
+                                <?php if ($_SESSION['role'] == 'admin'): ?>
+                                    <li><a class="dropdown-item py-2 text-primary fw-bold" href="admin_dashboard.php"><i class="fa-solid fa-gauge-high me-2"></i> Trang quản lý</a></li>
+                                <?php endif; ?>
+
+                                <li>
+                                    <hr class="dropdown-divider mx-2">
+                                </li>
+                                <li><a class="dropdown-item py-2 text-danger" href="logout.php"><i class="fa-solid fa-right-from-bracket me-2"></i> Đăng xuất</a></li>
+
+                            <?php else: ?>
+                                <li><a class="dropdown-item py-2" href="login.php"><i class="fa-solid fa-right-to-bracket me-2 text-muted"></i> Đăng nhập</a></li>
+                                <li><a class="dropdown-item py-2" href="register.php"><i class="fa-solid fa-user-plus me-2 text-muted"></i> Đăng ký</a></li>
                             <?php endif; ?>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-danger" href="logout.php">Đăng xuất</a></li>
-                        <?php else: ?>
-                            <li><a class="dropdown-item" href="login.php">Đăng nhập</a></li>
-                            <li><a class="dropdown-item" href="register.php">Đăng ký</a></li>
-                        <?php endif; ?>
-                    </ul>
-                </div>
+                        </ul>
+                    </div>
 
-                <!-- Giỏ hàng -->
-                <a href="view_cart.php" class="btn btn-dark btn-sm rounded-pill px-3 d-flex align-items-center">
-                    <svg width="18" height="18" fill="white" viewBox="0 0 576 512" class="me-2"><path d="M528.1 171.5L482 297.3c-11 30.2-39.6 50.7-71.7 50.7H203.1c-32.1 0-60.7-20.5-71.7-50.7L85.4 171.5c-4.1-11.3 4.3-23.5 16.4-23.5H411.6c12.1 0 20.5 12.2 16.4 23.5zM429.3 48H146.7c-12.1 0-20.5 12.2-16.4 23.5L176.4 128h223.2l46.1-56.5C449.8 60.2 441.4 48 429.3 48zM160 464a48 48 0 1 0 96 0 48 48 0 1 0 -96 0zm256 0a48 48 0 1 0 96 0 48 48 0 1 0 -96 0z"/></svg>
-                    <span>Giỏ hàng</span>
-                </a>
+                    <!-- Giỏ hàng -->
+                    <a href="view_cart.php" class="btn btn-dark btn-sm rounded-pill px-3 d-flex align-items-center">
+                        <svg width="18" height="18" fill="white" viewBox="0 0 576 512" class="me-2">
+                            <path d="M528.1 171.5L482 297.3c-11 30.2-39.6 50.7-71.7 50.7H203.1c-32.1 0-60.7-20.5-71.7-50.7L85.4 171.5c-4.1-11.3 4.3-23.5 16.4-23.5H411.6c12.1 0 20.5 12.2 16.4 23.5zM429.3 48H146.7c-12.1 0-20.5 12.2-16.4 23.5L176.4 128h223.2l46.1-56.5C449.8 60.2 441.4 48 429.3 48zM160 464a48 48 0 1 0 96 0 48 48 0 1 0 -96 0zm256 0a48 48 0 1 0 96 0 48 48 0 1 0 -96 0z" />
+                        </svg>
+                        <span>Giỏ hàng</span>
+                    </a>
+                </div>
             </div>
         </div>
-    </div>
-</nav>
+    </nav>
 
     <div class="container pb-5">
         <nav class="mt-4 ms-2" aria-label="breadcrumb">
