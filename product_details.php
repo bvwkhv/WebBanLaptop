@@ -124,7 +124,7 @@ function getAdminReply($db, $comment_id) {
         /* Tùy chỉnh phân trang & lọc */
         .filter-btn { border: 1px solid #eee; background: white; color: #555; transition: 0.2s; }
         .filter-btn.active { background-color: var(--price-red); color: white; border-color: var(--price-red); }
-        .pagination .page-link { color: #d70018; border: none; margin: 0 5px; border-radius: 8px; }
+        .pagination .page-link { color: #000000; border: none; margin: 0 5px; border-radius: 8px; }
         .pagination .page-item.active .page-link { background-color: #d70018; }
     </style>
 </head>
