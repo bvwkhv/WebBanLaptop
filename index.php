@@ -294,11 +294,14 @@ if (!empty($params)) {
 
             <div class="chat-input-area p-2 border-top">
                 <div class="input-group">
-                    <input type="text" id="user-msg" class="form-control form-control-sm border-0"
-                        placeholder="Nhập tin nhắn..."
-                        onkeypress="if(event.key === 'Enter') sendMessage()">
+                    <input type="file" id="image-input" accept="image/*" style="display: none;" onchange="previewImage()">
+                    <button class="btn btn-light btn-sm" onclick="document.getElementById('image-input').click()">🖼️</button>
+
+                    <input type="text" id="user-msg" class="form-control" placeholder="Nhập tin nhắn..." 
+       onkeypress="if(event.key === 'Enter') sendMessage()">
                     <button class="btn btn-primary btn-sm rounded-pill px-3" onclick="sendMessage()">Gửi</button>
                 </div>
+                <div id="file-preview" class="small text-primary mt-1" style="display:none; font-size: 11px;"></div>
             </div>
         </div>
 
@@ -386,22 +389,22 @@ if (!empty($params)) {
         }, 3000);
 
         function toggleActionMenu(event, msgId) {
-    event.stopPropagation();
-    // Đóng tất cả các menu khác đang mở
-    document.querySelectorAll('.action-menu').forEach(el => {
-        if (el.id !== 'menu-' + msgId) el.style.display = 'none';
-    });
-    
-    const menu = document.getElementById('menu-' + msgId);
-    if (menu) {
-        menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
-    }
-}
+            event.stopPropagation();
+            // Đóng tất cả các menu khác đang mở
+            document.querySelectorAll('.action-menu').forEach(el => {
+                if (el.id !== 'menu-' + msgId) el.style.display = 'none';
+            });
 
-// Click ra ngoài thì đóng menu
-document.addEventListener('click', function() {
-    document.querySelectorAll('.action-menu').forEach(el => el.style.display = 'none');
-});
+            const menu = document.getElementById('menu-' + msgId);
+            if (menu) {
+                menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+            }
+        }
+
+        // Click ra ngoài thì đóng menu
+        document.addEventListener('click', function() {
+            document.querySelectorAll('.action-menu').forEach(el => el.style.display = 'none');
+        });
 
         function confirmDelete(messageId) {
             if (confirm("Bạn muốn gỡ tin nhắn này?")) {
@@ -423,19 +426,41 @@ document.addEventListener('click', function() {
             document.querySelectorAll('.action-menu').forEach(el => el.style.display = 'none');
         });
 
+        function previewImage() {
+            const file = document.getElementById('image-input').files[0];
+            const preview = document.getElementById('file-preview');
+            if (file) {
+                preview.innerText = "Sắp gửi: " + file.name;
+                preview.style.display = "block";
+            }
+        }
+
         function sendMessage() {
             const input = document.getElementById('user-msg');
+            const imageInput = document.getElementById('image-input');
             const msg = input.value.trim();
-            if (!msg) return;
+            const file = imageInput.files[0];
+
+            if (msg === "" && !file) return;
+
             let formData = new FormData();
             formData.append('message', msg);
+            if (file) {
+                formData.append('image', file);
+            }
+
             fetch('send_message.php', {
                     method: 'POST',
                     body: formData
                 })
-                .then(() => {
-                    input.value = "";
-                    loadMessages(true);
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        input.value = "";
+                        imageInput.value = ""; // Xóa file sau khi gửi
+                        document.getElementById('file-preview').style.display = "none";
+                        loadMessages(true);
+                    }
                 });
         }
     </script>
