@@ -129,7 +129,7 @@ if (!empty($params)) {
 </head>
 
 <body>
-
+    <h1>ĐÂY LÀ SẢN PHẨM BÀI TẬP PHỤC VỤ CHẤM ĐIỂM MÔN HỌC, KHÔNG NHẰM MỤC ĐÍCH THƯƠNG MẠI.</h1>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-light shadow-sm sticky-top">
         <div class="container">
