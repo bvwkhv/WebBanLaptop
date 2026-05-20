@@ -1,5 +1,9 @@
 <?php
-require_once "auth_check.php"; 
+session_start();
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+    header("Location: index.php");
+    exit();
+}
 require_once "database.php";
 
 if (session_status() === PHP_SESSION_NONE) {

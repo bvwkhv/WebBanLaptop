@@ -173,6 +173,9 @@ $products = $db->select($sql, 'ii', [$limit, $offset]);
                 <a href="admin_comments.php" class="list-group-item sidebar-link">
                     <i class="fa-regular fa-comment" style="color: rgb(151, 151, 151);"></i> Bình luận
                 </a>
+                <a href="admin_users.php" class="list-group-item sidebar-link">
+                    <i class="fa-regular fa-user" style="color: rgb(151, 151, 151);"></i> Người dùng
+                </a>
             </div>
         </div>
 
