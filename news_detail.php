@@ -1,20 +1,25 @@
 <?php
+// Bắt đầu phiên làm việc (Session) để quản lý trạng thái đăng nhập, hiển thị thông tin user trên Navbar
+session_start();
+
+// Nhúng file cấu hình kết nối cơ sở dữ liệu
 require_once "database.php";
 $db = new Database();
 
-// Lấy ID tin tức từ URL
+// Lấy ID tin tức từ URL, ép kiểu (int) để phòng chống hoàn toàn lỗ hổng SQL Injection
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
-// Truy vấn lấy chi tiết bài viết
+// Truy vấn lấy chi tiết bài viết (Chỉ lấy bài viết có status = 1 tức là đang được cấu hình "Hiển thị")
 $sql = "SELECT * FROM news WHERE news_id = ? AND status = 1";
 $res = $db->select($sql, "i", [$id]);
 
-// Nếu không tìm thấy tin tức, quay về trang danh sách
+// Nếu không tìm thấy tin tức tương ứng trong cơ sở dữ liệu, lập tức điều hướng an toàn về trang danh sách
 if (empty($res)) {
     header("Location: news_list.php");
     exit();
 }
 
+// Gán mảng dữ liệu bản ghi tìm được vào biến bài viết $n
 $n = $res[0];
 ?>
 
@@ -23,158 +28,189 @@ $n = $res[0];
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($n['title']) ?></title>
-    <!-- Nhúng Bootstrap 5 -->
+    <title><?= htmlspecialchars($n['title']) ?> - Laptop Store</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2 family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="styles/styles.css">
+    
     <style>
-        body { background-color: #fdfae6; } /* Màu nền vàng nhạt đồng bộ */
+        /* Thiết lập nền trang và font chữ Inter chung toàn bộ hệ thống đồ án */
+        body { 
+            background-color: #fdfae6; /* Giữ tông màu kem Pastel đồng bộ nhận diện Laptop Store */
+            font-family: 'Inter', sans-serif;
+            color: #333;
+        }
+
+        /* --- KHỐI CONTAINER CHI TIẾT BÀI VIẾT --- */
         .detail-container {
             background: white;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-            margin-top: 50px;
+            padding: 45px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.02);
+            margin-top: 40px;
             margin-bottom: 50px;
+            border: 1px solid #f1f5f9;
         }
+
+        /* Huy hiệu danh mục (Khuyến mãi, Công nghệ, Hướng dẫn) */
         .news-category {
             display: inline-block;
             background-color: #ffb74d;
-            color: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: bold;
-            margin-bottom: 15px;
+            color: #4a321a; /* Đổi sang màu chữ tối giúp nâng cao độ tương phản, dễ đọc trên nền vàng cam */
+            padding: 6px 18px;
+            border-radius: 30px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
         }
+
+        /* Tiêu đề bài viết lớn */
         .news-title {
+            font-size: 2.2rem;
             font-weight: 800;
-            color: #333;
+            color: #1e293b;
             margin-bottom: 20px;
             line-height: 1.3;
+            letter-spacing: -0.5px;
         }
+
+        /* Thanh Meta dữ liệu (Ngày đăng bài) */
         .news-meta {
-            color: #888;
-            font-size: 0.9rem;
-            border-bottom: 1px solid #eee;
+            color: #64748b;
+            font-size: 0.88rem;
+            font-weight: 500;
+            border-bottom: 1px solid #f1f5f9;
             padding-bottom: 20px;
-            margin-bottom: 30px;
+            margin-bottom: 35px;
         }
+
+        /* Khung hiển thị hình ảnh đại diện lớn */
         .news-image {
             width: 100%;
-            max-height: 500px;
-            object-fit: cover;
-            border-radius: 10px;
-            margin-bottom: 30px;
+            max-height: 480px;
+            object-fit: cover; /* Chống méo móp, phình giãn ảnh bất kể kích thước thực tế upload */
+            border-radius: 12px;
+            margin-bottom: 35px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.02);
         }
+
+        /* Khu vực hiển thị văn bản chi tiết bài tin tức */
         .news-content {
-            line-height: 1.8;
-            color: #444;
-            font-size: 1.1rem;
-            text-align: justify;
+            line-height: 1.85;
+            color: #334155;
+            font-size: 1.08rem;
+            text-align: justify; /* Căn đều hai bên lề chữ giúp văn bản đều đặn, chuẩn giao diện báo chí */
         }
+
+        /* Nút quay lại danh sách bài tin tức */
         .btn-back {
             background-color: transparent;
             color: #ffb74d;
             border: 2px solid #ffb74d;
-            border-radius: 25px;
-            padding: 8px 25px;
-            font-weight: bold;
-            transition: 0.3s;
+            border-radius: 30px;
+            padding: 10px 28px;
+            font-weight: 600;
+            font-size: 0.92rem;
+            transition: all 0.2s ease;
             text-decoration: none;
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
             margin-top: 40px;
         }
         .btn-back:hover {
             background-color: #ffb74d;
-            color: white;
+            color: #4a321a !important; /* Đồng bộ màu chữ khi hover qua nút */
+            box-shadow: 0 4px 12px rgba(255, 183, 77, 0.25);
+            transform: translateX(-2px); /* Tạo hiệu ứng chuyển động nhẹ dịch về bên trái khi rê chuột */
         }
     </style>
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-light border-bottom">
-  <div class="container">
-    <a class="navbar-brand home" href="index.php">Home</a>
-    <a class="navbar-brand home" href="news_list.php">Tin tức</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
-      <span class="navbar-toggler-icon"></span>
-    </button>
 
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0"></ul>
-
-      <form class="d-flex mx-auto mt-2 mt-lg-0" action="index.php" method="GET" style="width: 100%; max-width: 500px;">
-        <input class="form-control me-2" type="search" name="search" placeholder="Tìm kiếm nhanh..." value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
-        <button class="btn btn-success" type="submit">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" viewBox="0 0 512 512">
-            <path fill="currentColor" d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376C296.3 401.1 253.9 416 208 416 93.1 416 0 322.9 0 208S93.1 0 208 0 416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"/>
-          </svg>
-        </button>
-      </form>
-
-      <div class="ms-auto d-inline-flex align-items-center">
-        <div class="dropdown custom-user-dropdown">
-          <a href="#" class="btn btn-danger btn-sm d-inline-flex justify-content-center align-items-center user dropdown-toggle" 
-             id="userMenu" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
-            <svg xmlns="http://www.w3.org/2000/svg" width="26px" height="30px" viewBox="0 0 448 512">
-              <path fill="rgb(255, 255, 255)" d="M224 248a120 120 0 1 0 0-240 120 120 0 1 0 0 240zm-29.7 56C95.8 304 16 383.8 16 482.3 16 498.7 29.3 512 45.7 512l356.6 0c16.4 0 29.7-13.3 29.7-29.7 0-98.5-79.8-178.3-178.3-178.3l-59.4 0z"/>
-            </svg>
-          </a>
-          <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userMenu">
-            <?php if (isset($_SESSION['user_id'])): ?>
-              <li><h6 class="dropdown-header text-dark">Chào, <?= $_SESSION['username'] ?></h6></li>
-              <li><a class="dropdown-item" href="profile.php">Thông tin tài khoản</a></li>
-              <li><a class="dropdown-item" href="order_history.php">Lịch sử đơn hàng</a></li>
-              <?php if ($_SESSION['role'] == 'admin'): ?>
-                <li><a class="dropdown-item fw-bold text-primary" href="admin_dashboard.php">Trang Quản Trị</a></li>
-              <?php endif; ?>
-              <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item text-danger" href="logout.php">Đăng xuất</a></li>
-            <?php else: ?>
-              <li><a class="dropdown-item" href="login.php">Đăng nhập</a></li>
-              <li><a class="dropdown-item" href="register.php">Đăng ký</a></li>
-            <?php endif; ?>
-          </ul>
-        </div>
-
-        <a href="view_cart.php" class="btn btn-danger btn-sm d-inline-flex justify-content-center align-items-center shopping-cart ms-2">
-          <svg xmlns="http://www.w3.org/2000/svg" width="30px" height="26px" viewBox="0 0 640 512">
-            <path fill="rgb(255, 255, 255)" d="M24-16C10.7-16 0-5.3 0 8S10.7 32 24 32l45.3 0c3.9 0 7.2 2.8 7.9 6.6l52.1 286.3c6.2 34.2 36 59.1 70.8 59.1L456 384c13.3 0 24-10.7 24-24s-10.7-24-24-24l-255.9 0c-11.6 0-21.5-8.3-23.6-19.7l-5.1-28.3 303.6 0c30.8 0 57.2-21.9 62.9-52.2L568.9 69.9C572.6 50.2 557.5 32 537.4 32l-412.7 0-.4-2c-4.8-26.6-28-46-55.1-46L24-16zM208 512a48 48 0 1 0 0-96 48 48 0 1 0 0 96zm224 0a48 48 0 1 0 0-96 48 48 0 1 0 0 96z"/>
-          </svg>
-          <span class="ms-1">Giỏ hàng</span>
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-light shadow-sm sticky-top">
+    <div class="container">
+        <a class="navbar-brand d-flex align-items-center" href="index.php">
+            <img src="image/logolaptop.jpg" width="40" height="40" class="rounded-circle me-2" alt="">
+            <span class="fw-bold">LAPTOP STORE</span>
         </a>
-      </div>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
+                <li class="nav-item"><a class="nav-link" href="index.php">Trang chủ</a></li>
+                <li class="nav-item"><a class="nav-link" href="news_list.php">Tin tức</a></li>
+            </ul>
+
+            <form class="d-flex mx-auto search-group w-100" style="max-width: 450px;" action="index.php" method="GET">
+                <input class="form-control" type="search" name="search" placeholder="Tìm kiếm laptop..." value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
+                <button class="btn px-4" type="submit">🔍</button>
+            </form>
+
+            <div class="ms-auto d-flex align-items-center mt-3 mt-lg-0">
+                <!-- User Menu -->
+                <div class="dropdown me-3">
+                    <a href="#" class="btn btn-dark btn-sm rounded-circle p-2" id="userMenu" data-bs-toggle="dropdown">
+                        <svg width="20" height="20" fill="white" viewBox="0 0 448 512"><path d="M224 256c70.7 0 128-57.3 128-128S294.7 0 224 0 96 57.3 96 128s57.3 128 128 128zm89.6 32h-16.7c-22.2 10.2-46.9 16-72.9 16s-50.6-5.8-72.9-16h-16.7C60.2 288 0 348.2 0 422.4V464c0 26.5 21.5 48 48 48h352c26.5 0 48-21.5 48-48v-41.6c0-74.2-60.2-134.4-134.4-134.4z"/></svg>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
+                        <?php if (isset($_SESSION['user_id'])): ?>
+                            <li><h6 class="dropdown-header">Hi, <?= $_SESSION['username'] ?></h6></li>
+                            <li><a class="dropdown-item" href="profile.php">Tài khoản</a></li>
+                            <?php if ($_SESSION['role'] == 'admin'): ?>
+                                <li><a class="dropdown-item text-primary fw-bold" href="admin_dashboard.php">Trang quản lý</a></li>
+                            <?php endif; ?>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="logout.php">Đăng xuất</a></li>
+                        <?php else: ?>
+                            <li><a class="dropdown-item" href="login.php">Đăng nhập</a></li>
+                            <li><a class="dropdown-item" href="register.php">Đăng ký</a></li>
+                        <?php endif; ?>
+                    </ul>
+                </div>
+
+                <!-- Giỏ hàng -->
+                <a href="view_cart.php" class="btn btn-dark btn-sm rounded-pill px-3 d-flex align-items-center">
+                    <svg width="18" height="18" fill="white" viewBox="0 0 576 512" class="me-2"><path d="M528.1 171.5L482 297.3c-11 30.2-39.6 50.7-71.7 50.7H203.1c-32.1 0-60.7-20.5-71.7-50.7L85.4 171.5c-4.1-11.3 4.3-23.5 16.4-23.5H411.6c12.1 0 20.5 12.2 16.4 23.5zM429.3 48H146.7c-12.1 0-20.5 12.2-16.4 23.5L176.4 128h223.2l46.1-56.5C449.8 60.2 441.4 48 429.3 48zM160 464a48 48 0 1 0 96 0 48 48 0 1 0 -96 0zm256 0a48 48 0 1 0 96 0 48 48 0 1 0 -96 0z"/></svg>
+                    <span>Giỏ hàng</span>
+                </a>
+            </div>
+        </div>
     </div>
-  </div>
 </nav>
 
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-lg-9">
             <div class="detail-container">
-                <!-- Danh mục -->
                 <span class="news-category"><?= htmlspecialchars($n['category']) ?></span>
                 
-                <!-- Tiêu đề -->
                 <h1 class="news-title"><?= htmlspecialchars($n['title']) ?></h1>
                 
-                <!-- Thông tin ngày đăng -->
                 <div class="news-meta">
-                    <span>📅 Ngày đăng: <?= date('d/m/Y', strtotime($n['created_at'])) ?></span>
+                    <span><i class="fa-regular fa-calendar-days me-1 text-secondary"></i> Ngày đăng: <?= date('d/m/Y', strtotime($n['created_at'])) ?></span>
                 </div>
 
-                <!-- Hình ảnh bài viết -->
-                <img src="image/<?= $n['image_url'] ?>" 
+                <img src="image/news/<?= htmlspecialchars($n['image_url']) ?>" 
                      class="news-image shadow-sm" 
                      alt="<?= htmlspecialchars($n['title']) ?>"
-                     onerror="this.src='https://placehold.co/800x400?text=News+Image'">
+                     onerror="this.src='https://placehold.co/800x450?text=Laptop+Store+News'">
 
-                <!-- Nội dung chi tiết -->
                 <div class="news-content">
                     <?= nl2br(htmlspecialchars($n['content'])) ?>
                 </div>
 
-                <!-- Nút quay lại -->
-                <a href="news_list.php" class="btn-back">← Quay lại danh sách</a>
+                <div class="border-top mt-5 pt-2">
+                    <a href="news_list.php" class="btn-back">
+                        <i class="fa-solid fa-arrow-left"></i> Quay lại danh sách tin
+                    </a>
+                </div>
             </div>
         </div>
     </div>

@@ -129,7 +129,6 @@ if (!empty($params)) {
 </head>
 
 <body>
-    <h1>ĐÂY LÀ SẢN PHẨM BÀI TẬP PHỤC VỤ CHẤM ĐIỂM MÔN HỌC, KHÔNG NHẰM MỤC ĐÍCH THƯƠNG MẠI.</h1>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-light shadow-sm sticky-top">
         <div class="container">
@@ -208,6 +207,15 @@ if (!empty($params)) {
             </div>
         </div>
     </nav>
+
+    <div class="container mt-3">
+        <div class="alert alert-warning border-0 shadow-sm text-center my-0 py-2" role="alert" style="border-radius: 8px;">
+            <i class="fa-solid fa-triangle-exclamation me-2 text-warning"></i>
+            <span class="fw-bold text-dark" style="font-size: 14px; letter-spacing: 0.5px;">
+                ĐÂY LÀ SẢN PHẨM BÀI TẬP PHỤC VỤ CHẤM ĐIỂM MÔN HỌC, KHÔNG NHẰM MỤC ĐÍCH THƯƠNG MẠI.
+            </span>
+        </div>
+    </div>
 
     <!-- Banner Slider -->
     <header class="container gallery-container">
