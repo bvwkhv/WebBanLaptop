@@ -1,20 +1,24 @@
 <?php
+// Bắt đầu phiên làm việc để kiểm tra quyền đăng nhập
 session_start();
 
-// --- 1. KIỂM TRA QUYỀN TRUY CẬP
+// --- 1. KIỂM TRA QUYỀN TRUY CẬP (BẢO MẬT) ---
+// Nếu chưa đăng nhập hoặc vai trò không phải là 'admin', chặn truy cập và đá về trang chủ
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     header("Location: index.php");
     exit();
 }
 
+// Nhúng file cấu hình Database và khởi tạo đối tượng kết nối
 require_once "database.php";
 $db = new Database();
 
-// --- 2. XỬ LÝ CẬP NHẬT TRẠNG THÁI (AJAX) ---
+// --- 2. XỬ LÝ CẬP NHẬT TRẠNG THÁI ĐƠN HÀNG QUA AJAX (POST) ---
 if (isset($_POST['update_status'])) {
     $order_id = (int)$_POST['order_id'];
     $new_status = $_POST['status'];
 
+    // Lấy trạng thái hiện tại của đơn hàng trong DB để so sánh logic
     $current_order = $db->select("SELECT status FROM orders WHERE order_id = ?", "i", [$order_id]);
 
     if (empty($current_order)) {
@@ -24,16 +28,14 @@ if (isset($_POST['update_status'])) {
 
     $old_status = $current_order[0]['status'];
 
-    // 1. ĐỊNH NGHĨA TRẠNG THÁI CUỐI (Không được phép sửa đổi nữa)
+    // Quy tắc 1: Định nghĩa các trạng thái cuối (Đơn hàng đã đóng, không cho phép sửa đổi nữa)
     $final_statuses = ['Đã giao', 'Đã hủy', 'Đã hoàn tiền'];
-
     if (in_array($old_status, $final_statuses)) {
-        echo "error_locked"; // Đơn đã kết thúc thì không được đổi đi đâu nữa
+        echo "error_locked"; 
         exit;
     }
 
-    // 2. CHẶN CẬP NHẬT NGƯỢC (Logic quy trình: Chờ xử lý -> Xác nhận -> Giao hàng -> Đã giao)
-    // Nếu muốn kỹ hơn, bạn có thể chặn theo thứ tự ưu tiên
+    // Quy tắc 2: Định cấp độ ưu tiên trạng thái để chặn cập nhật ngược quy trình quản lý vận đơn
     $status_priority = [
         'Chờ xử lý' => 1,
         'Đã xác nhận' => 2,
@@ -44,7 +46,7 @@ if (isset($_POST['update_status'])) {
         'Đã hoàn tiền' => 7
     ];
 
-    // Nếu trạng thái mới có thứ tự nhỏ hơn trạng thái hiện tại -> Chặn (Trừ trường hợp Hủy/Hoàn tiền đặc biệt)
+    // Nếu cố tình chuyển về trạng thái có cấp độ thấp hơn (Hạ cấp đơn hàng) -> Chặn, trừ quyền Hủy đơn đặc biệt
     if (isset($status_priority[$new_status]) && isset($status_priority[$old_status])) {
         if ($status_priority[$new_status] < $status_priority[$old_status] && $new_status !== 'Đã hủy') {
             echo "error_logic_back";
@@ -52,14 +54,15 @@ if (isset($_POST['update_status'])) {
         }
     }
 
-    // 3. THỰC HIỆN CẬP NHẬT
+    // Quy tắc 3: Tiến hành cập nhật trạng thái mới vào bảng orders
     $sql = "UPDATE orders SET status = ? WHERE order_id = ?";
     $db->execute($sql, 'si', [$new_status, $order_id]);
 
-    // Ghi nhật ký lịch sử (Giữ nguyên phần mô tả của bạn)
+    // Khởi tạo các chuỗi mô tả log hành trình mặc định
     $description = "Trạng thái đơn hàng đã được thay đổi thành: " . $new_status;
     $location = "Hệ thống quản lý";
 
+    // Phân nhánh ghi log chi tiết tự động dựa theo trạng thái admin chọn
     if ($new_status === 'Đã xác nhận') {
         $description = "Người bán đã xác nhận đơn hàng và đang chuẩn bị sản phẩm.";
     } elseif ($new_status === 'Đang trên đường giao') {
@@ -71,6 +74,7 @@ if (isset($_POST['update_status'])) {
         $description = "Đơn hàng đã bị hủy bởi quản trị viên.";
     }
 
+    // Ghi nhận mốc lịch sử mới vào bảng order_history để hiển thị bên dòng thời gian timeline người dùng
     $sql_history = "INSERT INTO order_history (order_id, status_name, description, location, created_at) 
                     VALUES (?, ?, ?, ?, NOW())";
     $db->execute($sql_history, 'isss', [$order_id, $new_status, $description, $location]);
@@ -79,21 +83,24 @@ if (isset($_POST['update_status'])) {
     exit;
 }
 
-// --- 3. CẤU HÌNH PHÂN TRANG ---
-$limit = 5;
+// --- 3. CẤU HÌNH LOGIC PHÂN TRANG DỮ LIỆU ---
+$limit = 5; // Số lượng đơn hàng hiển thị trên một trang
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 if ($page < 1) $page = 1;
-$offset = ($page - 1) * $limit;
+$offset = ($page - 1) * $limit; // Tính điểm bắt đầu lấy dữ liệu trong truy vấn SQL
 
+// Đếm tổng số lượng đơn hàng hiện có để tính toán tổng số trang
 $total_result = $db->select("SELECT COUNT(*) as total FROM orders");
 $total_orders = $total_result[0]['total'];
 $total_pages = ceil($total_orders / $limit);
 
+// Lấy danh sách đơn hàng theo giới hạn phân trang (Sắp xếp đơn mới nhất lên đầu)
 $orders = $db->select("SELECT * FROM orders ORDER BY order_id DESC LIMIT $limit OFFSET $offset");
 
-// Hàm lấy lý do trả hàng
-function getReturnReason($db, $order_id)
-{
+/**
+ * Hàm hỗ trợ lấy lý do hoàn trả hàng của khách từ lịch sử log đơn
+ */
+function getReturnReason($db, $order_id) {
     $sql = "SELECT description FROM order_history WHERE order_id = ? AND status_name = 'Yêu cầu trả hàng' ORDER BY created_at DESC LIMIT 1";
     $result = $db->select($sql, "i", [$order_id]);
     return !empty($result) ? $result[0]['description'] : '';
@@ -102,97 +109,134 @@ function getReturnReason($db, $order_id)
 
 <!DOCTYPE html>
 <html lang="vi">
-
 <head>
     <meta charset="UTF-8">
-    <title>Quản lý đơn hàng</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý đơn hàng - Admin Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
         body {
-            background-color: #fdfae7;
+            background-color: #fdfae7; /* Màu nền kem sữa nhẹ nhàng đồng bộ hệ thống */
+            font-family: 'Inter', sans-serif;
+            color: #333333;
         }
 
+        /* Thùng chứa bảng danh sách */
         .table-card {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02);
+            border: none;
         }
 
-        .status-select {
-            border-radius: 20px;
+        /* Định hình lại cấu trúc bảng dữ liệu sạch (Clean Table) */
+        .table {
+            margin-bottom: 0;
+        }
+        .table th {
+            font-weight: 600;
+            color: #6c757d;
             font-size: 0.85rem;
-            padding: 0.375rem 1rem;
+            text-uppercase: uppercase;
+            letter-spacing: 0.5px;
+            padding: 16px;
+            background-color: #f8f9fa !important;
+            border-bottom: 1px solid #edf2f7;
+        }
+        .table td {
+            padding: 16px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.9rem;
+        }
+        .table tbody tr {
+            transition: background-color 0.2s ease;
+        }
+        .table tbody tr:hover {
+            background-color: #fcfbf4 !important; /* Hiệu ứng highlight nhẹ khi rê chuột qua dòng */
+        }
+
+        /* --- TÁI CẤU TRÚC ĐƯỜNG NÉT SELECT DROPDOWN TRẠNG THÁI (TONE PASTEL) --- */
+        .status-select {
+            border-radius: 30px;
+            font-size: 0.8rem;
+            padding: 6px 16px;
             cursor: pointer;
-            font-weight: bold;
-            width: 185px;
+            font-weight: 600;
+            width: 175px;
+            border: none;
+            text-align: center;
+            box-shadow: none !important;
+            transition: all 0.2s ease;
+        }
+        .status-select:focus {
+            transform: scale(1.02);
         }
 
-        .status-waiting {
-            background-color: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeeba;
-        }
+        /* Các mã màu Pastel mượt mà cho từng nhóm trạng thái */
+        .status-waiting { background-color: #fff3cd; color: #664d03; }
+        .status-confirmed { background-color: #d1e7dd; color: #0f5132; }
+        .status-shipping { background-color: #cff4fc; color: #055160; }
+        .status-shipped { background-color: #e2f0d9; color: #2e6930; }
+        .status-cancelled { background-color: #f8d7da; color: #842029; }
+        .status-return-pending { background-color: #f3f4f6; color: #4b5563; border: 1px dashed #d1d5db; }
+        .status-refunded { background-color: #e2d9f3; color: #4b2c85; }
 
-        .status-confirmed {
-            background-color: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
-        }
-
-        .status-shipping {
-            background-color: #e3f2fd;
-            color: #0d6efd;
-            border: 1px solid #bbdefb;
-        }
-
-        .status-shipped {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .status-cancelled {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .status-return-pending {
-            background-color: #e2e3e5;
-            color: #383d41;
-            border: 1px solid #d6d8db;
-        }
-
-        .status-refunded {
-            background-color: #d1cfeb;
-            color: #512da8;
-            border: 1px solid #b39ddb;
-        }
-
-        /* CSS xử lý lý do trả hàng (Bấm vào được) */
-        .reason-col {
-            max-width: 180px;
-        }
-
+        /* Cột hiển thị lý do hoàn trả */
+        .reason-col { max-width: 170px; }
         .reason-text {
             display: block;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
+            font-weight: 500;
             color: #dc3545;
             background: #fff5f5;
-            padding: 5px 10px;
-            border-radius: 6px;
-            border-left: 4px solid #dc3545;
+            padding: 6px 12px;
+            border-radius: 8px;
+            border-left: 3px solid #dc3545;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
         }
-
         .reason-text:hover {
             background: #fee2e2;
-            transform: scale(1.02);
+            transform: translateY(-1px);
+        }
+
+        /* Nút bấm điều hướng chung */
+        .btn-custom-nav {
+            background: white;
+            border: 1px solid #dee2e6;
+            color: #495057;
+            font-weight: 500;
+            padding: 8px 18px;
+            transition: all 0.2s ease;
+        }
+        .btn-custom-nav:hover {
+            background: #f8f9fa;
+            color: #212529;
+            border-color: #ced4da;
+        }
+
+        /* CSS Tùy biến thanh phân trang (Pagination) */
+        .pagination .page-link {
+            color: #495057;
+            border: 1px solid #edf2f7;
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .pagination .page-item.active .page-link {
+            background-color: #212529;
+            border-color: #212529;
+            color: white;
+        }
+        .pagination .page-link:hover {
+            background-color: #f8f9fa;
+            color: #212529;
         }
     </style>
 </head>
@@ -201,37 +245,52 @@ function getReturnReason($db, $order_id)
 
     <div class="container py-5">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="fw-bold mb-0"><i class="bi bi-box-seam me-2 text-primary"></i>QUẢN LÝ ĐƠN HÀNG</h2>
+            <div>
+                <h3 class="fw-bold mb-0 text-dark" style="letter-spacing: -0.5px;">
+                    <i class="bi bi-box-seam me-2 text-dark"></i>Quản Lý Đơn Hàng
+                </h3>
+                <p class="text-muted small mb-0 mt-1">Hệ thống kiểm duyệt trạng thái vận đơn và xử lý yêu cầu hoàn trả.</p>
+            </div>
             <div class="d-flex gap-2">
-                <a href="admin_dashboard.php" class="btn btn-dark rounded-pill px-4 shadow-sm">Trang Admin</a>
-                <a href="admin_statistics.php" class="btn btn-primary rounded-pill shadow-sm">Thống kê</a>
+                <a href="admin_dashboard.php" class="btn btn-custom-nav rounded-3 shadow-sm text-dark">
+                    <i class="bi bi-speedometer2 me-1"></i> Dashboard
+                </a>
+                <a href="admin_statistics.php" class="btn btn-dark rounded-3 shadow-sm px-4">
+                    <i class="bi bi-graph-up-arrow me-1"></i> Thống kê
+                </a>
             </div>
         </div>
 
         <div class="table-card p-4">
             <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead class="table-light text-center">
+                <table class="table table-borderless align-middle">
+                    <thead class="text-center">
                         <tr>
-                            <th>Mã đơn</th>
-                            <th>Khách hàng</th>
+                            <th style="width: 100px;">Mã đơn</th>
+                            <th class="text-start">Khách hàng</th>
                             <th>Ngày đặt</th>
                             <th>Tổng tiền</th>
                             <th>Trạng thái duyệt</th>
                             <th>Lý do trả hàng</th>
-                            <th>Thao tác</th>
+                            <th style="width: 80px;">Xem</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php foreach ($orders as $row): ?>
                             <tr>
-                                <td class="text-center fw-bold">#<?= $row['order_id'] ?></td>
+                                <td class="text-center fw-bold text-secondary">#<?= $row['order_id'] ?></td>
+                                
                                 <td>
-                                    <div class="fw-bold text-nowrap"><?= htmlspecialchars(mb_strimwidth($row['customer_name'] ?? 'Khách lẻ', 0, 20, "...")) ?></div>
-                                    <div class="small text-muted"><?= $row['phone'] ?? '' ?></div>
+                                    <div class="fw-bold text-dark text-nowrap">
+                                        <?= htmlspecialchars(mb_strimwidth($row['customer_name'] ?? 'Khách lẻ', 0, 20, "...")) ?>
+                                    </div>
+                                    <div class="small text-muted mt-1"><i class="bi bi-telephone me-1"></i><?= $row['phone'] ?? '' ?></div>
                                 </td>
-                                <td class="text-center"><?= date('d/m/Y', strtotime($row['order_date'])) ?></td>
-                                <td class="text-center fw-bold text-primary"><?= number_format($row['total_amount'], 0, ',', '.') ?>đ</td>
+                                
+                                <td class="text-center text-secondary"><?= date('d/m/Y', strtotime($row['order_date'])) ?></td>
+                                
+                                <td class="text-center fw-bold text-dark"><?= number_format($row['total_amount'], 0, ',', '.') ?>đ</td>
+                                
                                 <td class="text-center">
                                     <select class="form-select form-select-sm status-change status-select mx-auto 
                                     <?= ($row['status'] == 'Chờ xử lý') ? 'status-waiting' : '' ?>
@@ -253,19 +312,23 @@ function getReturnReason($db, $order_id)
                                         <option value="Đã hoàn tiền" <?= $row['status'] == 'Đã hoàn tiền' ? 'selected' : '' ?>>💰 Đã hoàn tiền</option>
                                     </select>
                                 </td>
+                                
                                 <td class="reason-col">
                                     <?php if ($row['status'] == 'Yêu cầu trả hàng'):
                                         $reason = getReturnReason($db, $row['order_id']); ?>
                                         <div class="reason-text"
-                                            onclick="showReasonModal('<?= $row['order_id'] ?>', `<?= addslashes(htmlspecialchars($reason)) ?>`)">
-                                            <i class="bi bi-search me-1"></i> <?= htmlspecialchars($reason) ?>
+                                             onclick="showReasonModal('<?= $row['order_id'] ?>', `<?= addslashes(htmlspecialchars($reason)) ?>`)">
+                                            <i class="bi bi-info-circle me-1"></i> <?= htmlspecialchars($reason) ?>
                                         </div>
                                     <?php else: ?>
-                                        <div class="text-center text-muted small">---</div>
+                                        <div class="text-center text-muted small">—</div>
                                     <?php endif; ?>
                                 </td>
+                                
                                 <td class="text-center">
-                                    <a href="order_details.php?id=<?= $row['order_id'] ?>" class="btn btn-sm btn-outline-info rounded-pill"><i class="bi bi-eye"></i></a>
+                                    <a href="order_details.php?id=<?= $row['order_id'] ?>" class="btn btn-sm btn-light border rounded-3 text-secondary">
+                                        <i class="bi bi-chevron-right"></i>
+                                    </a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -275,12 +338,18 @@ function getReturnReason($db, $order_id)
 
             <?php if ($total_pages > 1): ?>
                 <nav class="mt-4">
-                    <ul class="pagination justify-content-center">
-                        <li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>"><a class="page-link" href="?page=<?= $page - 1 ?>">Trước</a></li>
+                    <ul class="pagination justify-content-center mb-0">
+                        <li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
+                            <a class="page-link rounded-start-3" href="?page=<?= $page - 1 ?>">Trước</a>
+                        </li>
                         <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-                            <li class="page-item <?= ($page == $i) ? 'active' : '' ?>"><a class="page-link" href="?page=<?= $i ?>"><?= $i ?></a></li>
+                            <li class="page-item <?= ($page == $i) ? 'active' : '' ?>">
+                                <a class="page-link" href="?page=<?= $i ?>"><?= $i ?></a>
+                            </li>
                         <?php endfor; ?>
-                        <li class="page-item <?= ($page >= $total_pages) ? 'disabled' : '' ?>"><a class="page-link" href="?page=<?= $page + 1 ?>">Sau</a></li>
+                        <li class="page-item <?= ($page >= $total_pages) ? 'disabled' : '' ?>">
+                            <a class="page-link rounded-end-3" href="?page=<?= $page + 1 ?>">Sau</a>
+                        </li>
                     </ul>
                 </nav>
             <?php endif; ?>
@@ -289,27 +358,30 @@ function getReturnReason($db, $order_id)
 
     <div class="modal fade" id="reasonModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content shadow border-0">
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title fs-6"><i class="bi bi-exclamation-triangle me-2"></i>Chi tiết lý do trả hàng</h5>
+            <div class="modal-content shadow border-0 style='border-radius: 12px; overflow: hidden;'">
+                <div class="modal-header bg-dark text-white p-3">
+                    <h5 class="modal-title fs-6 fw-bold"><i class="bi bi-exclamation-circle me-2 text-warning"></i>Chi tiết lý do trả hàng</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
-                    <p class="fw-bold mb-2">Đơn hàng: <span id="modalOrderId" class="text-danger"></span></p>
-                    <div class="p-3 bg-light rounded border border-danger-subtle">
-                        <p id="modalReasonContent" class="mb-0 text-dark" style="white-space: pre-wrap; line-height: 1.6;"></p>
+                    <p class="fw-bold mb-2 text-secondary">Mã đơn hàng: <span id="modalOrderId" class="text-dark"></span></p>
+                    <div class="p-3 bg-light rounded border">
+                        <p id="modalReasonContent" class="mb-0 text-dark" style="white-space: pre-wrap; line-height: 1.6; font-size: 0.9rem;"></p>
                     </div>
                 </div>
-                <div class="modal-footer border-0">
-                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Đóng</button>
+                <div class="modal-footer border-0 p-3 pt-0">
+                    <button type="button" class="btn btn-light border rounded-pill px-4 btn-sm" data-bs-dismiss="modal">Đóng cửa sổ</button>
                 </div>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
     <script>
-        // Hàm bật Modal hiện lý do
+        /**
+         * Kích hoạt hiển thị cửa sổ Modal chứa nội dung lý do trả hàng của khách
+         */
         function showReasonModal(orderId, reason) {
             document.getElementById('modalOrderId').innerText = '#' + orderId;
             document.getElementById('modalReasonContent').innerText = reason;
@@ -317,19 +389,25 @@ function getReturnReason($db, $order_id)
             myModal.show();
         }
 
-        // Xử lý AJAX đổi trạng thái
+        /**
+         * Lắng nghe sự kiện thay đổi trạng thái của các thẻ Select và gửi AJAX về Server
+         */
         document.querySelectorAll('.status-change').forEach(select => {
             select.addEventListener('change', function() {
                 const orderId = this.getAttribute('data-id');
                 const newStatus = this.value;
                 const el = this;
 
+                // Làm mờ tạm thời phần tử select để báo hiệu trạng thái đang xử lý bất đồng bộ
                 el.style.opacity = '0.5';
+                
+                // Khởi tạo FormData đóng gói dữ liệu đẩy qua POST
                 const formData = new FormData();
                 formData.append('update_status', 'true');
                 formData.append('order_id', orderId);
                 formData.append('status', newStatus);
 
+                // Thực hiện gửi yêu cầu ngầm bằng Fetch API
                 fetch('admin_orders.php', {
                         method: 'POST',
                         body: formData
@@ -337,18 +415,23 @@ function getReturnReason($db, $order_id)
                     .then(res => res.text())
                     .then(data => {
                         const result = data.trim();
+                        // Phân tích kết quả trả về từ Backend PHP xử lý
                         if (result === "success") {
-                            location.reload();
+                            location.reload(); // Tải lại trang để cập nhật giao diện và ghi nhận Log lịch sử mới
                         } else if (result === "error_locked") {
-                            alert("Đơn hàng này đã kết thúc (Đã giao/Hủy), không thể thay đổi trạng thái nữa!");
+                            alert("Đơn hàng này đã kết thúc xử lý (Đã giao/Hủy/Hoàn tiền), không thể thay đổi trạng thái!");
                             location.reload();
                         } else if (result === "error_logic_back") {
-                            alert("Không thể chuyển đơn hàng quay lại bước trước đó!");
+                            alert("Lỗi quy trình: Không thể cập nhật trạng thái quay lùi lại bước trước đó!");
                             location.reload();
                         } else {
-                            alert("Có lỗi xảy ra: " + result);
+                            alert("Hệ thống phát hiện lỗi không xác định: " + result);
                             location.reload();
                         }
+                    })
+                    .catch(error => {
+                        alert("Lỗi kết nối mạng, vui lòng thử lại sau!");
+                        location.reload();
                     });
             });
         });

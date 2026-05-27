@@ -18,30 +18,56 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $role = $_POST['role'];
     $status = $_POST['status'];
 
+    // 1. Kiểm tra không được để trống các trường bắt buộc
     if (!empty($username) && !empty($email) && !empty($password) && !empty($phone)) {
         
+        // Chiều dài các chuỗi ký tự
+        $username_len = mb_strlen($username, 'UTF-8');
+        $email_len = strlen($email);
+        $password_len = strlen($password);
+        $phone_len = strlen($phone);
+
         // --- RÀNG BUỘC BẢO MẬT BACKEND (PHP VALIDATION) ---
+
+        // 2. Kiểm tra Họ tên (Độ dài 1 - 100, KHÔNG chứa ký tự đặc biệt, KHÔNG chứa số)
+        // \p{L} là đại diện cho tất cả chữ cái (bao gồm tiếng Việt), \s là khoảng trắng
+        if ($username_len < 1 || $username_len > 100) {
+            $error = "Họ tên phải có độ dài từ 1 đến 100 ký tự!";
+        } 
+        elseif (!preg_match('/^[\p{L}\s]+$/u', $username)) {
+            $error = "Họ tên chỉ được phép chứa chữ cái và khoảng trắng (không chứa số hoặc ký tự đặc biệt)!";
+        }
         
-        // 1. Kiểm tra định dạng Email chuẩn
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        // 3. Kiểm tra Email (Đúng định dạng, Độ dài 5 - 100)
+        elseif ($email_len < 5 || $email_len > 100) {
+            $error = "Email phải có độ dài từ 5 đến 100 ký tự!";
+        }
+        elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $error = "Định dạng Email nhập vào không hợp lệ!";
-        } 
-        // 2. Kiểm tra Số điện thoại (chỉ chứa số, độ dài từ 10 đến 11 ký tự)
-        elseif (!preg_match('/^[0-9]{10,11}$/', $phone)) {
-            $error = "Số điện thoại phải từ 10 - 11 số và không chứa chữ hoặc ký tự đặc biệt!";
-        } 
-        // 3. Kiểm tra độ dài mật khẩu (từ 6 ký tự trở lên)
-        elseif (strlen($password) < 6) {
-            $error = "Mật khẩu tạo mới phải từ 6 ký tự trở lên!";
-        } 
+        }
+
+        // 4. Kiểm tra Số điện thoại (Chỉ chứa số, Độ dài 10 - 11)
+        elseif ($phone_len < 10 || $phone_len > 11) {
+            $error = "Số điện thoại phải có độ dài từ 10 đến 11 ký tự!";
+        }
+        elseif (!preg_match('/^[0-9]+$/', $phone)) {
+            $error = "Số điện thoại chỉ được chứa các ký tự số, không chứa chữ hoặc khoảng trắng!";
+        }
+
+        // 5. Kiểm tra Mật khẩu (Độ dài 6 - 100)
+        elseif ($password_len < 6 || $password_len > 100) {
+            $error = "Mật khẩu phải có độ dài từ 6 đến 100 ký tự!";
+        }
+        
         else {
-            // Kiểm tra trùng lặp trong Database
-            $check_sql = "SELECT user_id FROM users WHERE email = ? OR username = ? OR phone = ?";
-            $existing = $db->select($check_sql, "sss", [$email, $username, $phone]);
+            // 6. Kiểm tra trùng lặp Email hoặc Số điện thoại trong Hệ thống
+            $check_sql = "SELECT user_id FROM users WHERE email = ? OR phone = ?";
+            $existing = $db->select($check_sql, "ss", [$email, $phone]);
 
             if (!empty($existing)) {
-                $error = "Tên đăng nhập, Email hoặc Số điện thoại này đã được sử dụng!";
+                $error = "Email hoặc Số điện thoại này đã được sử dụng bởi tài khoản khác!";
             } else {
+                // Tiến hành mã hóa mật khẩu và chèn vào Database
                 $hashed_password = password_hash($password, PASSWORD_BCRYPT);
                 $sql = "INSERT INTO users (username, email, phone, password, role, status) VALUES (?, ?, ?, ?, ?, ?)";
                 $db->execute($sql, "ssssss", [$username, $email, $phone, $hashed_password, $role, $status]);
@@ -51,7 +77,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
         }
     } else {
-        $error = "Vui lòng điền đầy đủ các thông tin bắt buộc.";
+        $error = "Vui lòng điền đầy đủ các thông tin bắt buộc, không được để trống.";
     }
 }
 ?>
@@ -86,22 +112,30 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <form action="admin_add_user.php" method="POST">
                 <div class="mb-3">
                     <label class="form-label fw-semibold text-secondary small">Họ Tên:</label>
-                    <input type="text" name="username" class="form-control" required placeholder="Nhập tên người dùng">
+                    <input type="text" name="username" class="form-control" required 
+                           placeholder="Nhập tên người dùng" maxlength="100"
+                           pattern="^[a-zA-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂÂÊÔƠỚ́́́́́uưăâêôớ́́́́́\s]+$"
+                           title="Họ tên từ 1-100 ký tự, chỉ chứa chữ cái và khoảng trắng, không chứa số hay ký tự đặc biệt.">
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label fw-semibold text-secondary small">Số điện thoại:</label>
-                    <input type="text" name="phone" class="form-control" required placeholder="Nhập số điện thoại (10 - 11 số)" pattern="[0-9]{10,11}" title="Số điện thoại phải từ 10 đến 11 ký tự số, không chứa chữ.">
+                    <input type="text" name="phone" class="form-control" required 
+                           placeholder="Nhập số điện thoại (10 - 11 số)" 
+                           pattern="[0-9]{10,11}" maxlength="11"
+                           title="Số điện thoại phải từ 10 đến 11 ký tự số, không chứa chữ hay ký tự đặc biệt.">
                 </div>
                 
                 <div class="mb-3">
                     <label class="form-label fw-semibold text-secondary small">Email:</label>
-                    <input type="email" name="email" class="form-control" required placeholder="example@gmail.com">
+                    <input type="email" name="email" class="form-control" required 
+                           placeholder="example@gmail.com" minlength="5" maxlength="100">
                 </div>
                 
                 <div class="mb-3">
                     <label class="form-label fw-semibold text-secondary small">Mật khẩu:</label>
-                    <input type="password" name="password" class="form-control" required placeholder="Mật khẩu tối thiểu 6 ký tự" minlength="6">
+                    <input type="password" name="password" class="form-control" required 
+                           placeholder="Mật khẩu từ 6 - 100 ký tự" minlength="6" maxlength="100">
                 </div>
 
                 <div class="mb-3">

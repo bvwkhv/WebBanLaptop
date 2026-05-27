@@ -1,5 +1,6 @@
 <?php
 session_start();
+// Kiểm tra quyền Admin, nếu không phải thì quay về trang chủ
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     header("Location: index.php");
     exit();
@@ -10,6 +11,7 @@ $db = new Database();
 $error = "";
 $success = "";
 
+// Kiểm tra tham số ID người dùng trên URL
 if (!isset($_GET['id'])) {
     header("Location: admin_users.php");
     exit();
@@ -17,6 +19,7 @@ if (!isset($_GET['id'])) {
 
 $user_id = $_GET['id'];
 
+// Lấy thông tin hiện tại của người dùng để đổ vào Form
 $sql_get = "SELECT user_id, username, email, phone, role, status FROM users WHERE user_id = ?";
 $res = $db->select($sql_get, "i", [$user_id]);
 if (empty($res)) {
@@ -24,6 +27,7 @@ if (empty($res)) {
 }
 $user = $res[0];
 
+// Xử lý khi Admin nhấn nút Cập nhật (Submit Form)
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = trim($_POST['username']);
     $email = trim($_POST['email']);
@@ -32,34 +36,72 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $role = $_POST['role'];
     $status = $_POST['status'];
 
+    // 1. Kiểm tra các trường thông tin bắt buộc không được để trống
     if (!empty($username) && !empty($email) && !empty($phone)) {
         
+        // Tính toán độ dài chuỗi (mb_strlen dùng cho ký tự có dấu như tiếng Việt)
+        $username_len = mb_strlen($username, 'UTF-8');
+        $email_len = strlen($email);
+        $password_len = strlen($password);
+        $phone_len = strlen($phone);
+
         // --- RÀNG BUỘC BẢO MẬT BACKEND (PHP VALIDATION) ---
         
-        // 1. Kiểm tra định dạng Email chuẩn
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        // 2. Kiểm tra Họ tên: Từ 1 - 100 ký tự, KHÔNG số, KHÔNG ký tự đặc biệt
+        // [\p{L}\s] chỉ chấp nhận chữ cái tiếng Việt/Latinh và khoảng trắng
+        if ($username_len < 1 || $username_len > 100) {
+            $error = "Họ tên phải có độ dài từ 1 đến 100 ký tự!";
+        } 
+        elseif (!preg_match('/^[\p{L}\s]+$/u', $username)) {
+            $error = "Họ tên chỉ được phép chứa chữ cái và khoảng trắng (không chứa số hoặc ký tự đặc biệt)!";
+        }
+        
+        // 3. Kiểm tra Email: Đúng định dạng, độ dài từ 5 - 100 ký tự
+        elseif ($email_len < 5 || $email_len > 100) {
+            $error = "Email phải có độ dài từ 5 đến 100 ký tự!";
+        }
+        elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $error = "Định dạng Email nhập vào không hợp lệ!";
+        }
+
+        // 4. Kiểm tra Số điện thoại: Chỉ chứa số, độ dài từ 10 - 11 số
+        elseif ($phone_len < 10 || $phone_len > 11) {
+            $error = "Số điện thoại phải có độ dài từ 10 đến 11 ký tự!";
+        }
+        elseif (!preg_match('/^[0-9]+$/', $phone)) {
+            $error = "Số điện thoại chỉ được chứa các ký tự số!";
+        }
+
+        // 5. Kiểm tra Mật khẩu mới: Chỉ validate nếu người dùng có nhập thay đổi (độ dài 6 - 100)
+        elseif (!empty($password) && ($password_len < 6 || $password_len > 100)) {
+            $error = "Mật khẩu mới phải có độ dài từ 6 đến 100 ký tự!";
         } 
-        // 2. Kiểm tra Số điện thoại (chỉ chứa số, độ dài từ 10 đến 11 ký tự)
-        elseif (!preg_match('/^[0-9]{10,11}$/', $phone)) {
-            $error = "Số điện thoại phải từ 10 - 11 số và không chứa chữ hoặc ký tự đặc biệt!";
-        } 
-        // 3. Kiểm tra độ dài mật khẩu (chỉ xét nếu người dùng có gõ thay đổi mật khẩu)
-        elseif (!empty($password) && strlen($password) < 6) {
-            $error = "Mật khẩu mới phải từ 6 ký tự trở lên!";
-        } 
+        
         else {
-            if (!empty($password)) {
-                $hashed_password = password_hash($password, PASSWORD_BCRYPT);
-                $sql_update = "UPDATE users SET username = ?, email = ?, phone = ?, password = ?, role = ?, status = ? WHERE user_id = ?";
-                $db->execute($sql_update, "ssssssi", [$username, $email, $phone, $hashed_password, $role, $status, $user_id]);
+            // 6. Kiểm tra trùng lặp Email hoặc SĐT với tài khoản khác (loại trừ ID hiện tại)
+            $check_sql = "SELECT user_id FROM users WHERE (email = ? OR phone = ?) AND user_id != ?";
+            $existing = $db->select($check_sql, "ssi", [$email, $phone, $user_id]);
+
+            if (!empty($existing)) {
+                $error = "Email hoặc Số điện thoại này đã được sử dụng bởi một tài khoản khác!";
             } else {
-                $sql_update = "UPDATE users SET username = ?, email = ?, phone = ?, role = ?, status = ? WHERE user_id = ?";
-                $db->execute($sql_update, "sssssi", [$username, $email, $phone, $role, $status, $user_id]);
+                
+                // Trường hợp 1: Admin có thay đổi mật khẩu mới
+                if (!empty($password)) {
+                    $hashed_password = password_hash($password, PASSWORD_BCRYPT);
+                    $sql_update = "UPDATE users SET username = ?, email = ?, phone = ?, password = ?, role = ?, status = ? WHERE user_id = ?";
+                    $db->execute($sql_update, "ssssssi", [$username, $email, $phone, $hashed_password, $role, $status, $user_id]);
+                } 
+                // Trường hợp 2: Để trống mật khẩu (Giữ nguyên mật khẩu cũ)
+                else {
+                    $sql_update = "UPDATE users SET username = ?, email = ?, phone = ?, role = ?, status = ? WHERE user_id = ?";
+                    $db->execute($sql_update, "sssssi", [$username, $email, $phone, $role, $status, $user_id]);
+                }
+                
+                $success = "Cập nhật dữ liệu tài khoản thành công!";
+                // Chuyển hướng về trang danh sách sau 1.5 giây
+                header("Refresh: 1.5; url=admin_users.php");
             }
-            
-            $success = "Cập nhật dữ liệu tài khoản thành công!";
-            header("Refresh: 1.5; url=admin_users.php");
         }
     } else {
         $error = "Họ tên, Email và Số điện thoại không được để trống.";
@@ -95,24 +137,35 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <?php if($success): ?> <div class="alert alert-success border-0 small rounded-3"><?= $success ?></div> <?php endif; ?>
 
             <form action="admin_edit_user.php?id=<?= $user_id ?>" method="POST">
+                
                 <div class="mb-3">
                     <label class="form-label fw-semibold text-secondary small">Họ Tên:</label>
-                    <input type="text" name="username" class="form-control" value="<?= htmlspecialchars($user['username']) ?>" required>
+                    <input type="text" name="username" class="form-control" 
+                           value="<?= htmlspecialchars($user['username']) ?>" required maxlength="100"
+                           pattern="^[a-zA-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂÂÊÔƠỚ́́́́́uưăâêôớ́́́́́\s]+$"
+                           title="Họ tên từ 1-100 ký tự, chỉ chứa chữ cái và khoảng trắng, không chứa số hay ký tự đặc biệt.">
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label fw-semibold text-secondary small">Số điện thoại:</label>
-                    <input type="text" name="phone" class="form-control" value="<?= htmlspecialchars($user['phone'] ?? '') ?>" required pattern="[0-9]{10,11}" title="Số điện thoại phải từ 10 đến 11 ký tự số, không chứa chữ.">
+                    <input type="text" name="phone" class="form-control" 
+                           value="<?= htmlspecialchars($user['phone'] ?? '') ?>" required 
+                           pattern="[0-9]{10,11}" maxlength="11" 
+                           title="Số điện thoại phải từ 10 đến 11 ký tự số, không chứa chữ hay khoảng trắng.">
                 </div>
                 
                 <div class="mb-3">
                     <label class="form-label fw-semibold text-secondary small">Email:</label>
-                    <input type="email" name="email" class="form-control" value="<?= htmlspecialchars($user['email']) ?>" required>
+                    <input type="email" name="email" class="form-control" 
+                           value="<?= htmlspecialchars($user['email']) ?>" required 
+                           minlength="5" maxlength="100">
                 </div>
                 
                 <div class="mb-3">
                     <label class="form-label fw-semibold text-secondary small">Mật khẩu mới (Để trống nếu giữ nguyên):</label>
-                    <input type="password" name="password" class="form-control" placeholder="Nhập mật khẩu mới nếu muốn thay đổi (Từ 6 ký tự trở lên)" minlength="6">
+                    <input type="password" name="password" class="form-control" 
+                           placeholder="Nhập mật khẩu mới từ 6 - 100 ký tự nếu muốn thay đổi" 
+                           minlength="6" maxlength="100">
                 </div>
 
                 <div class="mb-3">
